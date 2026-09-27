@@ -22,12 +22,16 @@ export default function Scan() {
   }
 
   async function save() {
-    const { data: store } = await supabase.from("stores").select("id").eq("chain", parsed.storeChain).limit(1).single();
-    for (const it of parsed.items) {
-      const { data: prod } = await supabase.from("products").upsert({ name_el: it.name, category: "Άλλα" }, { onConflict: "name_el" }).select("id").single();
-      if (prod && store) await supabase.from("prices").insert({ product_id: prod.id, store_id: (store as any).id, price: it.price });
+    try {
+      const { data: store } = await supabase.from("stores").select("id").eq("chain", parsed.storeChain).limit(1).single();
+      for (const it of parsed.items) {
+        const { data: prod } = await supabase.from("products").upsert({ name_el: it.name, category: "Άλλα" }, { onConflict: "name_el" }).select("id").single();
+        if (prod && store) await supabase.from("prices").insert({ product_id: prod.id, store_id: (store as any).id, price: it.price });
+      }
+      Alert.alert("Αποθηκεύτηκε ✅", `${parsed.items.length} προϊόντα από ${parsed.storeChain}`);
+    } catch {
+      Alert.alert("Κάτι πήγε στραβά", "Δεν αποθηκεύτηκε — check internet και ξαναπροσπάθησε.");
     }
-    Alert.alert("Αποθηκεύτηκε ✅", `${parsed.items.length} προϊόντα από ${parsed.storeChain}`);
   }
 
   return (
@@ -41,6 +45,7 @@ export default function Scan() {
         <AppleCard>
           <Text style={{ fontWeight: "700" }}>🏪 {parsed.storeChain} ({(parsed.storeConfidence*100).toFixed(0)}%)</Text>
           <Text>Σύνολο: {parsed.total?.toFixed(2)}€ • Εμπιστοσύνη: {(parsed.confidence*100).toFixed(0)}%</Text>
+          {parsed.storeChain === "Άγνωστο" && <Text style={{ color: "#D64545" }}>Δεν βρήκα κατάστημα 🏪 — έλεγξε την απόδειξη ✍️</Text>}
           {parsed.items.map((it, i) => <Text key={i}>• {it.name} — {it.price.toFixed(2)}€</Text>)}
           {parsed.confidence < 0.6 && <Text style={{ color: "#D64545" }}>Δεν διάβασα καλά — διόρθωσε ✍️</Text>}
         </AppleCard>
