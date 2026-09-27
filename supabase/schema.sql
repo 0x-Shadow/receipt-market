@@ -40,8 +40,7 @@ create table if not exists prices (
   receipt_id uuid references receipts(id) on delete set null,
   price numeric not null,
   freshness text default 'current' check (freshness in ('current', 'stale', 'outdated')),
-  created_at timestamptz default now(),
-  unique(product_id, store_id, price, created_at::date)
+  created_at timestamptz default now() not null
 );
 
 create table if not exists watchlist (
@@ -104,6 +103,21 @@ create policy "own profile" on profiles for all using (auth.uid() = id) with che
 
 create index if not exists community_posts_created_at_idx on community_posts(created_at desc);
 
+-- Makes the stores seed idempotent (on conflict do nothing needs a real target).
+create unique index if not exists stores_chain_name_idx on stores(chain, name);
+
+-- Anti-spam: one price row per product/store/price/day.
+-- COALESCE is required because NULLs are distinct in a btree index, so a plain
+-- (product_id, store_id, price, date(created_at)) index would still allow
+-- duplicates whenever product_id or store_id is null.
+create unique index if not exists prices_dedupe_idx
+  on prices (
+    coalesce(product_id, '00000000-0000-0000-0000-000000000000'::uuid),
+    coalesce(store_id, '00000000-0000-0000-0000-000000000000'::uuid),
+    price,
+    (created_at at time zone 'utc')::date
+  );
+
 -- Mark prices older than 30 days as stale
 create or replace function mark_stale_prices()
 returns trigger
@@ -149,7 +163,7 @@ insert into stores (chain, name, address) values
 ('Masoutis','Μασούτης Ν. Σμύρνη','Ελευθερίου Βενιζέλου 20'),
 ('AB','ΑΒ Βασιλόπουλος Γλυφάδα','Λ. Βουλιαγμένης 80'),
 ('My Market','My Market Περιστέρι','Π. Τσαλδάρη 40')
-on conflict do nothing;
+on conflict (chain, name) do nothing;
 
 -- Seed products (sample of 120 — extend freely)
 insert into products (name_el, category, emoji) values
