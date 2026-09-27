@@ -1,15 +1,25 @@
 import { createClient, type SupabaseClient, type Session, type User } from "@supabase/supabase-js";
 import { useCallback, useEffect, useState } from "react";
 import * as WebBrowser from "expo-web-browser";
-import { Linking } from "react-native";
+import * as Linking from "expo-linking";
 
 const url = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const anon = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
 
 if (!url || !anon) console.warn("⚠️ Missing EXPO_PUBLIC_SUPABASE_URL / ANON_KEY — copy .env.example to .env");
 
+WebBrowser.maybeCompleteAuthSession();
+
 export const supabase: SupabaseClient | null =
-  url && anon ? createClient(url, anon) : null;
+  url && anon
+    ? createClient(url, anon, {
+        auth: {
+          flowType: "pkce",
+          autoRefreshToken: true,
+          detectSessionInUrl: false,
+        },
+      })
+    : null;
 
 export async function signIn(email: string, password: string) {
   if (!supabase) throw new Error("Supabase not configured — add .env");
@@ -18,7 +28,7 @@ export async function signIn(email: string, password: string) {
   return data.session;
 }
 
-export async function signUp(email: string, password: string, name?: string) {
+export async function signUp(email: string, password: string, name?: string): Promise<{ needsEmailConfirmation: boolean }> {
   if (!supabase) throw new Error("Supabase not configured — add .env");
   const { data, error } = await supabase.auth.signUp({
     email,
@@ -26,18 +36,30 @@ export async function signUp(email: string, password: string, name?: string) {
     options: name ? { data: { name } } : undefined,
   });
   if (error) throw error;
-  return data.session;
+  return { needsEmailConfirmation: data.session === null };
 }
 
 export async function signInWithGoogle(): Promise<void> {
-  if (!supabase || !url) throw new Error("Supabase not configured — add .env");
-  const redirectTo = "receipt-market://auth/callback";
-  const authUrl = `${url}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(redirectTo)}`;
-  const result = await WebBrowser.openAuthSessionAsync(authUrl, redirectTo);
-  if (result.type === "success") {
-    const { data, error } = await supabase.auth.getSession();
-    if (error) throw error;
-  }
+  if (!supabase) throw new Error("Supabase not configured — add .env");
+
+  const redirectTo = Linking.createURL("auth/callback");
+
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: { redirectTo, skipBrowserRedirect: true },
+  });
+  if (error) throw error;
+  if (!data.url) throw new Error("Δεν ήταν δυνατή η έναρξη της σύνδεσης με Google");
+
+  const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
+  if (result.type === "cancel") return;
+  if (result.type !== "success") throw new Error("Η σύνδεση με Google απέτυχε");
+
+  const code = new URL(result.url).searchParams.get("code");
+  if (!code) throw new Error("Λείπει ο κωδικός επιβεβαίωσης στο redirect του Google");
+
+  const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+  if (exchangeError) throw exchangeError;
 }
 
 export async function signOut() {

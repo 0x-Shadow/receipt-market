@@ -15,7 +15,15 @@ export default function Signup() {
   const handleSignup = async () => {
     setLoading(true);
     try {
-      await signUp(email, password, name);
+      const { needsEmailConfirmation } = await signUp(email, password, name);
+      if (needsEmailConfirmation) {
+        setLoading(false);
+        Alert.alert(
+          "Έλεγξε το email σου",
+          "Στείλαμε σύνδεσμο επιβεβαίωσης στο " + email + ". Επιβεβαίωσε τον λογαριασμό και μετά συνδέσου."
+        );
+        return;
+      }
     } catch (error: any) {
       Alert.alert("Σφάλμα", error.message || "Η εγγραφή απέτυχε");
     } finally {
