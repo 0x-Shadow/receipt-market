@@ -31,15 +31,18 @@
     "react-native": "0.86.3",
     "react-native-safe-area-context": "~5.7.0",
     "react-native-screens": "~4.26.0",
-    "react-native-svg": "~15.11.0",
+    "react-native-svg": "15.15.4",
     "react-native-web": "^0.21.2"
   },
   "devDependencies": {
     "@expo/cli": "^57.0.27",
     "@types/react": "~19.2.0",
     "tsx": "^4.0.0",
-    "typescript": "~5.9.3",
+    "typescript": "~6.0.3",
     "vitest": "^2.0.0"
+  },
+  "allowScripts": {
+    "esbuild": true
   },
   "overrides": {
     "react": "19.2.3",
