@@ -48,11 +48,21 @@ create table if not exists watchlist (
   unique(user_id, product_id)
 );
 
+create table if not exists community_posts (
+  id uuid primary key default uuid_generate_v4(),
+  user_id uuid references auth.users(id) on delete cascade,
+  content text not null,
+  store text,
+  likes int not null default 0,
+  created_at timestamptz default now()
+);
+
 alter table stores enable row level security;
 alter table products enable row level security;
 alter table receipts enable row level security;
 alter table prices enable row level security;
 alter table watchlist enable row level security;
+alter table community_posts enable row level security;
 
 drop policy if exists "public read stores" on stores;
 create policy "public read stores" on stores for select using (true);
@@ -66,6 +76,29 @@ drop policy if exists "own watchlist" on watchlist;
 create policy "own watchlist" on watchlist for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 drop policy if exists "auth write prices" on prices;
 create policy "auth write prices" on prices for insert with check (auth.role() = 'authenticated');
+drop policy if exists "public read community_posts" on community_posts;
+create policy "public read community_posts" on community_posts for select using (true);
+drop policy if exists "auth write community_posts" on community_posts;
+create policy "auth write community_posts" on community_posts for insert with check (auth.role() = 'authenticated');
+
+create index if not exists community_posts_created_at_idx on community_posts(created_at desc);
+
+create or replace view price_history as
+select
+  p.id as price_id,
+  p.product_id,
+  pr.name_el as product_name,
+  p.store_id,
+  s.chain as store_chain,
+  p.price,
+  p.created_at,
+  lag(p.price) over (partition by p.product_id, p.store_id order by p.created_at) as previous_price,
+  p.price - lag(p.price) over (partition by p.product_id, p.store_id order by p.created_at) as price_change,
+  round(((p.price - lag(p.price) over (partition by p.product_id, p.store_id order by p.created_at)) / nullif(lag(p.price) over (partition by p.product_id, p.store_id order by p.created_at), 0)) * 100, 2) as change_percent
+from prices p
+join products pr on pr.id = p.product_id
+join stores s on s.id = p.store_id
+order by p.created_at desc;
 
 -- Seed stores
 insert into stores (chain, name, address) values

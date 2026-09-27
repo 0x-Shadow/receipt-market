@@ -6,6 +6,7 @@ const TABS: { name: string; icon: keyof typeof Ionicons.glyphMap; label: string 
   { name: "index", icon: "home", label: "Αρχική" },
   { name: "scan", icon: "camera", label: "Scan" },
   { name: "watchlist", icon: "heart", label: "Λίστα" },
+  { name: "community", icon: "people", label: "Κοινότητα" },
   { name: "profile", icon: "person", label: "Προφίλ" },
 ];
 

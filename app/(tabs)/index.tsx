@@ -1,46 +1,117 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { View, Text, TextInput, ScrollView, Pressable, StyleSheet } from "react-native";
+import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { supabase } from "../../src/lib/supabase";
-import { C, AppleCard, SectionHeader, EmojiTile, PriceBadge } from "../../src/components/Apple";
+import { C, AppleCard, EmojiTile, PriceBadge, Skeleton, EmptyState } from "../../src/components/Apple";
 
-const CATS = ["Όλα", "Γαλακτοκομικά", "Κρέας & Ψάρι", "Φρούτα & Λαχανικά", "Αρτοποιία", "Τρόφιμα", "Ποτά", "Καθαριότητα"];
+type PriceRow = {
+  price: number | string;
+  stores: { name: string; chain: string } | null;
+};
 
-const DEMO = [
-  { id: "1", name_el: "ΦΕΤΑ ΠΟΠ 400G", category: "Γαλακτοκομικά", emoji: "🧀", store: "Lidl Μαρούσι", dist: "1,2km", price: 4.39, old: 4.89 },
-  { id: "2", name_el: "ΓΑΛΑ ΦΡΕΣΚΟ 1L", category: "Γαλακτοκομικά", emoji: "🥛", store: "Μασούτης Ν. Σμύρνη", dist: "2,8km", price: 1.89, old: 2.10 },
-  { id: "3", name_el: "ΜΠΑΝΑΝΕΣ 1KG", category: "Φρούτα & Λαχανικά", emoji: "🍌", store: "Σκλαβενίτης Χαλάνδρι", dist: "3,1km", price: 1.29, old: 1.19 },
-  { id: "4", name_el: "ΨΩΜΙ ΤΟΣΤ", category: "Αρτοποιία", emoji: "🍞", store: "ΑΒ Γλυφάδα", dist: "4,0km", price: 2.10, old: 2.40 },
-  { id: "5", name_el: "ΚΑΦΕΣ ΕΛΛΗΝΙΚΟΣ", category: "Ποτά", emoji: "☕", store: "Lidl Μαρούσι", dist: "1,2km", price: 5.10, old: 5.60 },
-];
+type ProductRow = {
+  id: string;
+  name_el: string;
+  category: string;
+  emoji: string | null;
+  prices: PriceRow[];
+};
+
+type Item = {
+  id: string;
+  name_el: string;
+  category: string;
+  emoji: string;
+  price: number;
+  prevPrice?: number;
+  store?: string;
+};
 
 const TODAY = new Date().toLocaleDateString("el-GR", { weekday: "long", day: "numeric", month: "long" });
 
 export default function Home() {
+  const router = useRouter();
   const [q, setQ] = useState("");
   const [cat, setCat] = useState("Όλα");
-  const [items, setItems] = useState<any[]>(DEMO);
+  const [items, setItems] = useState<Item[]>([]);
+  const [loading, setLoading] = useState(true);
   const [live, setLive] = useState(false);
+  const prevPrices = useRef<Record<string, number>>({});
+
+  async function load() {
+    if (!supabase) {
+      setLoading(false);
+      return;
+    }
+    const { data, error } = await supabase
+      .from("products")
+      .select("id,name_el,category,emoji,prices!inner(price,stores!inner(name,chain))")
+      .order("created_at", { ascending: false, referencedTable: "prices" })
+      .limit(30);
+    if (error || !data) {
+      setLoading(false);
+      return;
+    }
+    const rows: Item[] = (data as unknown as ProductRow[]).map((r) => {
+      const p = r.prices[0];
+      const price = p ? Number(p.price) : 0;
+      const prevPrice = prevPrices.current[r.id];
+      prevPrices.current[r.id] = price;
+      return {
+        id: r.id,
+        name_el: r.name_el,
+        category: r.category,
+        emoji: r.emoji ?? "🛒",
+        price,
+        prevPrice,
+        store: p?.stores?.name ?? p?.stores?.chain,
+      };
+    });
+    setItems(rows);
+    setLoading(false);
+  }
 
   useEffect(() => {
+    void load();
+    if (!supabase) return;
     const sb = supabase;
-    if (!sb) return;
-    setLive(true);
-    sb.from("products").select("id,name_el,category,emoji").limit(30).then(({ data }) => setItems(data?.length ? data : DEMO));
-    const ch = sb.channel("prices-live").on("postgres_changes", { event: "INSERT", schema: "public", table: "prices" }, () => {
-      sb.from("products").select("id,name_el,category,emoji").limit(30).then(({ data }) => setItems(data?.length ? data : DEMO));
-    }).subscribe();
-    return () => { sb.removeChannel(ch); };
+    const ch = sb
+      .channel("prices-live")
+      .on("postgres_changes", { event: "*", schema: "public", table: "prices" }, () => {
+        void load();
+      })
+      .subscribe((status) => {
+        setLive(status === "SUBSCRIBED");
+      });
+    return () => {
+      sb.removeChannel(ch);
+    };
   }, []);
 
-  const filtered = items.filter(i => (cat === "Όλα" || i.category === cat) && i.name_el.toLowerCase().includes(q.toLowerCase()));
+  const cats = useMemo(
+    () => ["Όλα", ...Array.from(new Set(items.map((i) => i.category).filter(Boolean))).sort((a, b) => a.localeCompare(b, "el"))],
+    [items]
+  );
+
+  const filtered = items.filter(
+    (i) => (cat === "Όλα" || i.category === cat) && i.name_el.toLowerCase().includes(q.trim().toLowerCase())
+  );
 
   return (
     <ScrollView style={{ flex: 1, backgroundColor: C.bg }} contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
-      <View style={{ marginTop: 56, marginBottom: 18 }}>
-        <Text style={{ fontSize: 15, color: C.sub, fontWeight: "500", textTransform: "capitalize" }}>{TODAY}</Text>
-        <Text style={{ fontSize: 34, fontWeight: "800", letterSpacing: -0.5, marginTop: 2 }}>Αρχική</Text>
+      <View style={{ marginTop: 56, marginBottom: 18, flexDirection: "row", alignItems: "flex-end", justifyContent: "space-between" }}>
+        <View>
+          <Text style={{ fontSize: 15, color: C.sub, fontWeight: "500", textTransform: "capitalize" }}>{TODAY}</Text>
+          <Text style={{ fontSize: 34, fontWeight: "800", letterSpacing: -0.5, marginTop: 2 }}>Αρχική</Text>
+        </View>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+          <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: live ? C.green : C.ter }} />
+          <Text style={{ fontSize: 12.5, fontWeight: "600", color: live ? C.green : C.sub }}>
+            {live ? "Live" : loading ? "Σύνδεση…" : "Εκτός σύνδεσης"}
+          </Text>
+        </View>
       </View>
 
       <View style={styles.search}>
@@ -59,47 +130,17 @@ export default function Home() {
         )}
       </View>
 
-      <View style={{ height: 22 }} />
-      <SectionHeader title="Φθηνότερα κοντά σου" action="Περισσότερα" onAction={() => Haptics.selectionAsync()} />
-      {!live && (
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 10 }}>
-          <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: C.orange }} />
-          <Text style={{ fontSize: 12.5, color: C.sub, fontWeight: "500" }}>Δείγμα δεδομένων — σύνδεσε Supabase για live τιμές</Text>
-        </View>
-      )}
-      {filtered.map((item, idx) => (
-        <Pressable
-          key={item.id}
-          onPress={() => Haptics.selectionAsync()}
-          style={({ pressed }) => [{ marginBottom: 10, opacity: pressed ? 0.85 : 1 }]}
-        >
-          <AppleCard>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 13 }}>
-              <EmojiTile emoji={item.emoji ?? "🛒"} size={48} />
-              <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 16, fontWeight: "700", letterSpacing: -0.2 }}>{item.name_el}</Text>
-                <Text style={{ fontSize: 13, color: C.sub, marginTop: 2 }}>
-                  {item.store ?? item.category} {item.dist ? `· ${item.dist}` : ""}
-                </Text>
-              </View>
-              <View style={{ alignItems: "flex-end", gap: 5 }}>
-                <Text style={{ fontSize: 17, fontWeight: "800", letterSpacing: -0.3 }}>{(item.price ?? 2.19).toFixed(2)}€</Text>
-                <PriceBadge price={item.price ?? 2.19} oldPrice={item.old} />
-              </View>
-            </View>
-          </AppleCard>
-        </Pressable>
-      ))}
-
-      <View style={{ height: 26 }} />
-      <SectionHeader title="Κατηγορίες" />
+      <View style={{ height: 18 }} />
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingRight: 16 }}>
-        {CATS.map(c => {
+        {cats.map((c) => {
           const active = cat === c;
           return (
             <Pressable
               key={c}
-              onPress={() => { setCat(c); Haptics.selectionAsync(); }}
+              onPress={() => {
+                setCat(c);
+                Haptics.selectionAsync();
+              }}
               style={{
                 paddingHorizontal: 16,
                 paddingVertical: 9,
@@ -114,6 +155,65 @@ export default function Home() {
           );
         })}
       </ScrollView>
+
+      <View style={{ height: 18 }} />
+      {loading ? (
+        <View>
+          {Array.from({ length: 6 }).map((_, i) => (
+            <AppleCard key={i} style={{ marginBottom: 10 }}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 13 }}>
+                <Skeleton style={{ width: 48, height: 48, borderRadius: 14 }} />
+                <View style={{ flex: 1, gap: 8 }}>
+                  <Skeleton style={{ height: 15, width: "65%" }} />
+                  <Skeleton style={{ height: 12, width: "40%" }} />
+                </View>
+                <View style={{ alignItems: "flex-end", gap: 6 }}>
+                  <Skeleton style={{ height: 16, width: 52 }} />
+                  <Skeleton style={{ height: 20, width: 64, borderRadius: 8 }} />
+                </View>
+              </View>
+            </AppleCard>
+          ))}
+        </View>
+      ) : items.length === 0 ? (
+        <EmptyState
+          icon="cube-outline"
+          title="Δεν βρέθηκαν προϊόντα"
+          subtitle="Ελεγξε τη σύνδεση Supabase και δοκίμασε ξανά."
+        />
+      ) : filtered.length === 0 ? (
+        <EmptyState
+          icon="search-outline"
+          title="Κανένα αποτέλεσμα"
+          subtitle="Δοκίμασε άλλη αναζήτηση ή κατηγορία."
+        />
+      ) : (
+        filtered.map((item) => (
+          <Pressable
+            key={item.id}
+            onPress={() => Haptics.selectionAsync()}
+            style={({ pressed }) => [{ marginBottom: 10, opacity: pressed ? 0.85 : 1 }]}
+          >
+            <AppleCard>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 13 }}>
+                <EmojiTile emoji={item.emoji} size={48} />
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 16, fontWeight: "700", letterSpacing: -0.2 }} numberOfLines={1}>
+                    {item.name_el}
+                  </Text>
+                  <Text style={{ fontSize: 13, color: C.sub, marginTop: 2 }} numberOfLines={1}>
+                    {item.store ?? item.category}
+                  </Text>
+                </View>
+                <View style={{ alignItems: "flex-end", gap: 5 }}>
+                  <Text style={{ fontSize: 17, fontWeight: "800", letterSpacing: -0.3 }}>{item.price.toFixed(2)}€</Text>
+                  <PriceBadge price={item.price} oldPrice={item.prevPrice} />
+                </View>
+              </View>
+            </AppleCard>
+          </Pressable>
+        ))
+      )}
     </ScrollView>
   );
 }

@@ -5,8 +5,6 @@ export function formatDrop(name: string, price: number, old: number, store: stri
   return `🔻 ${name}: ${f(price)}€ στο ${store} (ήταν ${f(old)}€)`;
 }
 
-// expo-notifications remote push was removed from Expo Go in SDK 53+.
-// Load it defensively so the app still runs in Expo Go; push works in dev builds.
 let Notifications: any = null;
 try {
   Notifications = require("expo-notifications");
@@ -35,4 +33,12 @@ export async function toggleWatch(productId: string, targetPrice?: number) {
       { user_id: user.id, product_id: productId, target_price: targetPrice },
       { onConflict: "user_id,product_id" }
     );
+}
+
+export async function notifyPriceDrop(name: string, price: number, old: number, store: string) {
+  if (!Notifications) return;
+  await Notifications.scheduleNotificationAsync({
+    content: { title: "Πτώση τιμής", body: formatDrop(name, price, old, store) },
+    trigger: null,
+  });
 }

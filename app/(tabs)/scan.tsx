@@ -86,8 +86,9 @@ export default function Scan() {
   return (
     <View style={{ flex: 1, backgroundColor: "#000" }}>
       {raw === "" ? (
-        <CameraView ref={camRef} style={{ flex: 1 }} facing="back" flash={flash ? "on" : "off"}>
-          <View style={{ flex: 1 }}>
+        <View style={{ flex: 1 }}>
+          <CameraView style={{ flex: 1 }} facing="back" flash={flash ? "on" : "off"} ref={camRef} />
+          <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, pointerEvents: "box-none" }}>
             <View style={{ flex: 1, margin: 20, borderRadius: 24, borderWidth: 2, borderColor: "rgba(255,255,255,0.5)", overflow: "hidden", position: "relative" }}>
               <View style={{ position: "absolute", inset: 0, backgroundColor: "rgba(0,0,0,0.15)" }} />
               <View style={{ position: "absolute", top: 18, left: 0, right: 0, alignItems: "center" }}>
@@ -111,7 +112,7 @@ export default function Scan() {
               </View>
             </View>
           </View>
-        </CameraView>
+        </View>
       ) : (
         <ScrollView style={{ flex: 1, backgroundColor: C.bg }} contentContainerStyle={{ padding: 16, paddingTop: 70 }}>
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
