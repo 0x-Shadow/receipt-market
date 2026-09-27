@@ -18,9 +18,13 @@ export async function signIn(email: string, password: string) {
   return data.session;
 }
 
-export async function signUp(email: string, password: string) {
+export async function signUp(email: string, password: string, name?: string) {
   if (!supabase) throw new Error("Supabase not configured — add .env");
-  const { data, error } = await supabase.auth.signUp({ email, password });
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: name ? { data: { name } } : undefined,
+  });
   if (error) throw error;
   return data.session;
 }

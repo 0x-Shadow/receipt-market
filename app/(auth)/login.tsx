@@ -1,5 +1,17 @@
 import { useState } from "react";
-import { View, Text, TextInput, Pressable, StyleSheet, Alert, ActivityIndicator } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  Pressable,
+  StyleSheet,
+  Alert,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { signIn, signInWithGoogle } from "../../src/lib/supabase";
 import { C } from "../../src/components/Apple";
@@ -9,6 +21,7 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleLogin = async () => {
     setLoading(true);
@@ -33,143 +46,248 @@ export default function Login() {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.card}>
-        <Text style={styles.title}>Καλωσήρθες</Text>
-        <Text style={styles.subtitle}>Συνδέσου για να συνεχίσεις</Text>
-
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          placeholderTextColor={C.sub}
-          value={email}
-          onChangeText={setEmail}
-          autoCapitalize="none"
-          keyboardType="email-address"
-        />
-
-        <TextInput
-          style={styles.input}
-          placeholder="Κωδικός"
-          placeholderTextColor={C.sub}
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-        />
-
-        <Pressable style={styles.button} onPress={handleLogin} disabled={loading}>
-          {loading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.buttonText}>Σύνδεση</Text>
-          )}
-        </Pressable>
-
-        <View style={styles.dividerContainer}>
-          <View style={styles.dividerLine} />
-          <Text style={styles.dividerText}>ή</Text>
-          <View style={styles.dividerLine} />
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.header}>
+          <View style={styles.logoContainer}>
+            <Text style={styles.logoEmoji}>🧾</Text>
+          </View>
+          <Text style={styles.title}>Καλωσήρθες ξανά!</Text>
+          <Text style={styles.subtitle}>Συνδέσου στον λογαριασμό σου</Text>
         </View>
 
-        <Pressable style={styles.googleButton} onPress={handleGoogleLogin} disabled={loading}>
-          <Text style={styles.googleIcon}>G</Text>
-          <Text style={styles.googleButtonText}>Σύνδεση με Google</Text>
-        </Pressable>
+        <View style={styles.form}>
+          <View style={styles.inputContainer}>
+            <Ionicons
+              name="mail-outline"
+              size={20}
+              color="#8E8E93"
+              style={styles.inputIcon}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Email"
+              placeholderTextColor="#8E8E93"
+              value={email}
+              onChangeText={setEmail}
+              autoCapitalize="none"
+              keyboardType="email-address"
+            />
+          </View>
 
-        <Pressable onPress={() => router.push("/signup")}>
-          <Text style={styles.link}>Δεν έχεις λογαριασμό; Εγγράφησε</Text>
-        </Pressable>
-      </View>
-    </View>
+          <View style={styles.inputContainer}>
+            <Ionicons
+              name="lock-closed-outline"
+              size={20}
+              color="#8E8E93"
+              style={styles.inputIcon}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Κωδικός"
+              placeholderTextColor="#8E8E93"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!showPassword}
+            />
+            <Pressable
+              onPress={() => setShowPassword(!showPassword)}
+              style={styles.eyeIcon}
+            >
+              <Ionicons
+                name={showPassword ? "eye-outline" : "eye-off-outline"}
+                size={20}
+                color="#8E8E93"
+              />
+            </Pressable>
+          </View>
+
+          <Pressable
+            style={styles.button}
+            onPress={handleLogin}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.buttonText}>Σύνδεση</Text>
+            )}
+          </Pressable>
+
+          <Pressable style={styles.forgotPassword}>
+            <Text style={styles.forgotPasswordText}>Ξέχασες τον κωδικό;</Text>
+          </Pressable>
+
+          <View style={styles.dividerContainer}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>ή</Text>
+            <View style={styles.dividerLine} />
+          </View>
+
+          <Pressable
+            style={styles.googleButton}
+            onPress={handleGoogleLogin}
+            disabled={loading}
+          >
+            <View style={styles.googleIconContainer}>
+              <Text style={styles.googleG}>G</Text>
+            </View>
+            <Text style={styles.googleButtonText}>Σύνδεση με Google</Text>
+          </Pressable>
+        </View>
+
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>Δεν έχεις λογαριασμό; </Text>
+          <Pressable onPress={() => router.push("/signup")}>
+            <Text style={styles.footerLink}>Εγγράφησε</Text>
+          </Pressable>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: C.bg,
+    backgroundColor: "#1C1C1E",
+  },
+  scrollContent: {
+    flexGrow: 1,
     justifyContent: "center",
     padding: 24,
   },
-  card: {
-    backgroundColor: C.card,
-    borderRadius: 16,
-    padding: 24,
+  header: {
+    alignItems: "center",
+    marginBottom: 32,
+  },
+  logoContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 20,
+    backgroundColor: "#2C2C2E",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 20,
+  },
+  logoEmoji: {
+    fontSize: 40,
   },
   title: {
     fontSize: 28,
-    fontWeight: "800",
-    letterSpacing: -0.5,
+    fontWeight: "700",
+    color: "#FFFFFF",
     textAlign: "center",
+    marginBottom: 8,
   },
   subtitle: {
     fontSize: 15,
-    color: C.sub,
+    color: "#8E8E93",
     textAlign: "center",
-    marginTop: 4,
-    marginBottom: 24,
+  },
+  form: {
+    width: "100%",
+  },
+  inputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#2C2C2E",
+    borderRadius: 12,
+    marginBottom: 12,
+    paddingHorizontal: 14,
+  },
+  inputIcon: {
+    marginRight: 10,
   },
   input: {
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: C.separator,
-    borderRadius: 10,
-    padding: 14,
+    flex: 1,
+    paddingVertical: 14,
     fontSize: 16,
-    marginBottom: 12,
-    backgroundColor: C.bg,
+    color: "#FFFFFF",
+  },
+  eyeIcon: {
+    padding: 4,
   },
   button: {
-    backgroundColor: C.tint,
-    borderRadius: 10,
+    backgroundColor: "#007AFF",
+    borderRadius: 12,
     padding: 14,
     alignItems: "center",
-    marginTop: 4,
+    marginTop: 8,
   },
   buttonText: {
-    color: "#fff",
+    color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "600",
+  },
+  forgotPassword: {
+    alignItems: "center",
+    marginTop: 16,
+  },
+  forgotPasswordText: {
+    color: "#007AFF",
+    fontSize: 14,
   },
   dividerContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginVertical: 20,
+    marginVertical: 24,
   },
   dividerLine: {
     flex: 1,
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: C.separator,
+    height: 1,
+    backgroundColor: "#3A3A3C",
   },
   dividerText: {
     marginHorizontal: 12,
-    color: C.sub,
+    color: "#8E8E93",
     fontSize: 14,
   },
   googleButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#FFFFFF",
-    borderWidth: 1,
-    borderColor: "#DADCE0",
-    borderRadius: 10,
+    backgroundColor: "#2C2C2E",
+    borderRadius: 12,
     padding: 14,
     gap: 10,
   },
-  googleIcon: {
-    fontSize: 20,
+  googleIconContainer: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: "#FFFFFF",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  googleG: {
+    fontSize: 14,
     fontWeight: "700",
     color: "#4285F4",
   },
   googleButtonText: {
     fontSize: 16,
     fontWeight: "500",
-    color: "#1F1F1F",
+    color: "#FFFFFF",
   },
-  link: {
-    color: C.tint,
+  footer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    marginTop: 24,
+  },
+  footerText: {
+    color: "#8E8E93",
     fontSize: 14,
-    textAlign: "center",
-    marginTop: 16,
+  },
+  footerLink: {
+    color: "#007AFF",
+    fontSize: 14,
+    fontWeight: "500",
   },
 });

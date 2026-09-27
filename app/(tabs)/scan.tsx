@@ -436,7 +436,6 @@ export default function Scan() {
                       onPress={() => {
                         setBarcodeResult(null);
                         setBarcodeMode(false);
-                        router.push("/correct");
                       }}
                       style={{ flex: 1, backgroundColor: C.orange, borderRadius: 12, paddingVertical: 12, alignItems: "center" }}
                     >
@@ -565,10 +564,13 @@ export default function Scan() {
               )}
 
               <Pressable
-                onPress={() => router.push({ pathname: "/correct", params: { items: JSON.stringify(parsed.items) } })}
+                onPress={() => {
+                  setRaw("");
+                  Haptics.selectionAsync();
+                }}
                 style={{ backgroundColor: C.orange, borderRadius: 16, paddingVertical: 16, alignItems: "center", marginBottom: 12 }}
               >
-                <Text style={{ color: "#fff", fontSize: 17, fontWeight: "800" }}>Διόρθωση</Text>
+                <Text style={{ color: "#fff", fontSize: 17, fontWeight: "800" }}>Νέα σάρωση</Text>
               </Pressable>
 
               <Pressable

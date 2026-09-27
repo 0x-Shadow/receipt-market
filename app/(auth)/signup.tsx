@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { View, Text, TextInput, Pressable, StyleSheet, Alert, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
+import { Ionicons, Fontisto } from "@expo/vector-icons";
 import { signUp, signInWithGoogle } from "../../src/lib/supabase";
-import { C } from "../../src/components/Apple";
 
 export default function Signup() {
   const router = useRouter();
@@ -10,11 +10,12 @@ export default function Signup() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSignup = async () => {
     setLoading(true);
     try {
-      await signUp(email, password);
+      await signUp(email, password, name);
     } catch (error: any) {
       Alert.alert("Σφάλμα", error.message || "Η εγγραφή απέτυχε");
     } finally {
@@ -35,43 +36,63 @@ export default function Signup() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.card}>
+      <Pressable style={styles.backButton} onPress={() => router.back()}>
+        <Ionicons name="chevron-back" size={26} color="#FFFFFF" />
+      </Pressable>
+
+      <View style={styles.content}>
+        <View style={styles.logo}>
+          <Text style={styles.logoEmoji}>🧾</Text>
+        </View>
+
         <Text style={styles.title}>Δημιουργία λογαριασμού</Text>
-        <Text style={styles.subtitle}>Εγγράφησε για να ξεκινήσεις</Text>
+        <Text style={styles.subtitle}>Εγγραφείτε στην κοινότητά μας και ξεκινήστε να εξοικονομείτε μαζί.</Text>
 
-        <TextInput
-          style={styles.input}
-          placeholder="Όνομα"
-          placeholderTextColor={C.sub}
-          value={name}
-          onChangeText={setName}
-          autoCapitalize="words"
-        />
+        <View style={styles.inputContainer}>
+          <Ionicons name="person-outline" size={18} color="#8E8E93" style={styles.inputIcon} />
+          <TextInput
+            style={styles.input}
+            placeholder="Ονοματεπώνυμο"
+            placeholderTextColor="#8E8E93"
+            value={name}
+            onChangeText={setName}
+            autoCapitalize="words"
+          />
+        </View>
 
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          placeholderTextColor={C.sub}
-          value={email}
-          onChangeText={setEmail}
-          autoCapitalize="none"
-          keyboardType="email-address"
-        />
+        <View style={styles.inputContainer}>
+          <Ionicons name="mail-outline" size={18} color="#8E8E93" style={styles.inputIcon} />
+          <TextInput
+            style={styles.input}
+            placeholder="Email"
+            placeholderTextColor="#8E8E93"
+            value={email}
+            onChangeText={setEmail}
+            autoCapitalize="none"
+            keyboardType="email-address"
+          />
+        </View>
 
-        <TextInput
-          style={styles.input}
-          placeholder="Κωδικός"
-          placeholderTextColor={C.sub}
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-        />
+        <View style={styles.inputContainer}>
+          <Ionicons name="lock-closed-outline" size={18} color="#8E8E93" style={styles.inputIcon} />
+          <TextInput
+            style={styles.input}
+            placeholder="Κωδικός"
+            placeholderTextColor="#8E8E93"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry={!showPassword}
+          />
+          <Pressable onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
+            <Ionicons name={showPassword ? "eye-outline" : "eye-off-outline"} size={18} color="#8E8E93" />
+          </Pressable>
+        </View>
 
         <Pressable style={styles.button} onPress={handleSignup} disabled={loading}>
           {loading ? (
-            <ActivityIndicator color="#fff" />
+            <ActivityIndicator color="#FFFFFF" />
           ) : (
-            <Text style={styles.buttonText}>Δημιουργία λογαριασμού</Text>
+            <Text style={styles.buttonText}>Εγγραφή</Text>
           )}
         </Pressable>
 
@@ -82,13 +103,16 @@ export default function Signup() {
         </View>
 
         <Pressable style={styles.googleButton} onPress={handleGoogleSignup} disabled={loading}>
-          <Text style={styles.googleIcon}>G</Text>
-          <Text style={styles.googleButtonText}>Εγγραφή με Google</Text>
+          <Fontisto name="google" size={18} color="#FFFFFF" />
+          <Text style={styles.googleButtonText}>Συνέχεια με Google</Text>
         </Pressable>
 
-        <Pressable onPress={() => router.push("/login")}>
-          <Text style={styles.link}>Έχεις ήδη λογαριασμό; Συνδέσου</Text>
-        </Pressable>
+        <Text style={styles.loginText}>
+          Έχεις ήδη λογαριασμό;{" "}
+          <Text style={styles.loginLink} onPress={() => router.push("/login")}>
+            Συνδέσου
+          </Text>
+        </Text>
       </View>
     </View>
   );
@@ -97,89 +121,119 @@ export default function Signup() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: C.bg,
-    justifyContent: "center",
-    padding: 24,
+    backgroundColor: "#1C1C1E",
   },
-  card: {
-    backgroundColor: C.card,
-    borderRadius: 16,
-    padding: 24,
+  backButton: {
+    position: "absolute",
+    top: 56,
+    left: 20,
+    zIndex: 10,
+    padding: 4,
+  },
+  content: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 24,
+  },
+  logo: {
+    width: 72,
+    height: 72,
+    borderRadius: 20,
+    backgroundColor: "#FFFFFF",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 20,
+  },
+  logoEmoji: {
+    fontSize: 38,
   },
   title: {
+    color: "#FFFFFF",
     fontSize: 28,
-    fontWeight: "800",
-    letterSpacing: -0.5,
+    fontWeight: "700",
     textAlign: "center",
   },
   subtitle: {
+    color: "#8E8E93",
     fontSize: 15,
-    color: C.sub,
     textAlign: "center",
-    marginTop: 4,
-    marginBottom: 24,
+    marginTop: 6,
+    marginBottom: 28,
+  },
+  inputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#2C2C2E",
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    marginBottom: 12,
+    width: "100%",
+  },
+  inputIcon: {
+    marginRight: 8,
   },
   input: {
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: C.separator,
-    borderRadius: 10,
-    padding: 14,
+    flex: 1,
+    color: "#FFFFFF",
     fontSize: 16,
-    marginBottom: 12,
-    backgroundColor: C.bg,
+    paddingVertical: 14,
+  },
+  eyeIcon: {
+    padding: 4,
   },
   button: {
-    backgroundColor: C.tint,
-    borderRadius: 10,
-    padding: 14,
+    backgroundColor: "#007AFF",
+    borderRadius: 12,
+    paddingVertical: 15,
     alignItems: "center",
-    marginTop: 4,
+    width: "100%",
+    marginTop: 8,
   },
   buttonText: {
-    color: "#fff",
+    color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "600",
   },
   dividerContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginVertical: 20,
+    marginVertical: 22,
+    width: "100%",
   },
   dividerLine: {
     flex: 1,
     height: StyleSheet.hairlineWidth,
-    backgroundColor: C.separator,
+    backgroundColor: "#48484A",
   },
   dividerText: {
     marginHorizontal: 12,
-    color: C.sub,
+    color: "#8E8E93",
     fontSize: 14,
   },
   googleButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#FFFFFF",
-    borderWidth: 1,
-    borderColor: "#DADCE0",
-    borderRadius: 10,
-    padding: 14,
+    backgroundColor: "#2C2C2E",
+    borderRadius: 12,
+    paddingVertical: 14,
+    width: "100%",
     gap: 10,
   },
-  googleIcon: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: "#4285F4",
-  },
   googleButtonText: {
+    color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "500",
-    color: "#1F1F1F",
   },
-  link: {
-    color: C.tint,
+  loginText: {
+    color: "#8E8E93",
     fontSize: 14,
     textAlign: "center",
-    marginTop: 16,
+    marginTop: 24,
+  },
+  loginLink: {
+    color: "#007AFF",
+    fontWeight: "600",
   },
 });
