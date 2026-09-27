@@ -108,14 +108,17 @@ create unique index if not exists stores_chain_name_idx on stores(chain, name);
 
 -- Anti-spam: one price row per product/store/price/day.
 -- COALESCE is required because NULLs are distinct in a btree index, so a plain
--- (product_id, store_id, price, date(created_at)) index would still allow
--- duplicates whenever product_id or store_id is null.
+-- (product_id, store_id, price, day) index would still allow duplicates
+-- whenever product_id or store_id is null.
+-- date(timezone('utc', created_at)) is used instead of a ::date cast so the
+-- whole expression stays an immutable function call, which is what a btree
+-- index requires.
 create unique index if not exists prices_dedupe_idx
   on prices (
     coalesce(product_id, '00000000-0000-0000-0000-000000000000'::uuid),
     coalesce(store_id, '00000000-0000-0000-0000-000000000000'::uuid),
     price,
-    (created_at at time zone 'utc')::date
+    date(timezone('utc', created_at))
   );
 
 -- Mark prices older than 30 days as stale
