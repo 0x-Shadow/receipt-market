@@ -3,6 +3,7 @@ import { View, Text, Pressable, TextInput, ScrollView, Alert, StyleSheet } from 
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
+import { useRouter } from "expo-router";
 import TextRecognition from "@react-native-ml-kit/text-recognition";
 import { parseGreekReceipt } from "../../src/parser/greekReceiptParser";
 import { supabase } from "../../src/lib/supabase";
@@ -11,11 +12,16 @@ import { C, AppleCard, EmojiTile } from "../../src/components/Apple";
 const SAMPLE = "ΣΚΛΑΒΕΝΙΤΗΣ\nΦΕΤΑ ΠΟΠ 400G 4,89\nΓΑΛΑ 1L 1,89\nΣΥΝΟΛΟ 6,78";
 
 export default function Scan() {
+  const router = useRouter();
   const [permission, requestPermission] = useCameraPermissions();
   const [raw, setRaw] = useState("");
   const [busy, setBusy] = useState(false);
   const [flash, setFlash] = useState(false);
+  const [barcodeMode, setBarcodeMode] = useState(false);
+  const [barcodeResult, setBarcodeResult] = useState<{ found: boolean; name?: string; id?: string } | null>(null);
+  const [manualBarcode, setManualBarcode] = useState("");
   const camRef = useRef<CameraView>(null);
+  const lastBarcodeRef = useRef<string>("");
   const parsed = raw ? parseGreekReceipt(raw) : null;
 
   async function snap() {
@@ -33,6 +39,52 @@ export default function Scan() {
     } finally {
       setBusy(false);
     }
+  }
+
+  async function handleBarcodeScan({ data }: { data: string }) {
+    if (data === lastBarcodeRef.current) return;
+    lastBarcodeRef.current = data;
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    try {
+      if (!supabase) return;
+      const { data: product } = await supabase
+        .from("products")
+        .select("id, name_el")
+        .eq("barcode", data)
+        .limit(1)
+        .single();
+      if (product) {
+        setBarcodeResult({ found: true, name: (product as any).name_el, id: (product as any).id });
+      } else {
+        setBarcodeResult({ found: false });
+      }
+    } catch {
+      setBarcodeResult({ found: false });
+    }
+  }
+
+  function addToReceiptFromBarcode() {
+    if (!barcodeResult?.found || !barcodeResult.name) return;
+    const existing = raw ? `${raw}\n` : "";
+    setRaw(`${existing}${barcodeResult.name} 0,00`);
+    setBarcodeResult(null);
+    setBarcodeMode(false);
+    lastBarcodeRef.current = "";
+  }
+
+  function addManualToReceipt() {
+    if (!barcodeResult?.found || !barcodeResult.name) return;
+    const existing = raw ? `${raw}\n` : "";
+    setRaw(`${existing}${barcodeResult.name} 0,00`);
+    setBarcodeResult(null);
+    setBarcodeMode(false);
+    lastBarcodeRef.current = "";
+  }
+
+  function resetBarcode() {
+    setBarcodeResult(null);
+    setManualBarcode("");
+    lastBarcodeRef.current = "";
   }
 
   async function save() {
@@ -83,6 +135,88 @@ export default function Scan() {
     );
   }
 
+  if (barcodeMode) {
+    return (
+      <View style={{ flex: 1, backgroundColor: "#000" }}>
+        <CameraView
+          style={{ flex: 1 }}
+          facing="back"
+          flash={flash ? "on" : "off"}
+          ref={camRef}
+          barcodeScannerSettings={{ barcodeTypes: ["ean13", "ean8", "upc_a", "upc_e", "code128", "code39"] }}
+          onBarcodeScanned={handleBarcodeScan}
+        />
+        <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, pointerEvents: "box-none" }}>
+          <View style={{ flex: 1, margin: 20, borderRadius: 24, borderWidth: 2, borderColor: "rgba(255,255,255,0.5)", overflow: "hidden", position: "relative" }}>
+            <View style={{ position: "absolute", inset: 0, backgroundColor: "rgba(0,0,0,0.15)" }} />
+            <View style={{ position: "absolute", top: 18, left: 0, right: 0, alignItems: "center" }}>
+              <View style={{ backgroundColor: "rgba(0,0,0,0.55)", paddingHorizontal: 16, paddingVertical: 8, borderRadius: 999 }}>
+                <Text style={{ color: "#fff", fontSize: 13.5, fontWeight: "600" }}>Στόκασε τον barcode 📦</Text>
+              </View>
+            </View>
+          </View>
+
+          {barcodeResult && (
+            <View style={{ position: "absolute", bottom: 120, left: 20, right: 20 }}>
+              {barcodeResult.found ? (
+                <View style={{ backgroundColor: "rgba(0,0,0,0.85)", borderRadius: 16, padding: 16 }}>
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 12 }}>
+                    <Ionicons name="checkmark-circle" size={24} color={C.green} />
+                    <Text style={{ color: "#fff", fontSize: 16, fontWeight: "700", flex: 1 }}>{barcodeResult.name}</Text>
+                  </View>
+                  <View style={{ flexDirection: "row", gap: 10 }}>
+                    <Pressable onPress={addToReceiptFromBarcode} style={{ flex: 1, backgroundColor: C.green, borderRadius: 12, paddingVertical: 12, alignItems: "center" }}>
+                      <Text style={{ color: "#fff", fontSize: 15, fontWeight: "700" }}>Προσθήκη ✓</Text>
+                    </Pressable>
+                    <Pressable onPress={resetBarcode} style={{ flex: 1, backgroundColor: "rgba(255,255,255,0.2)", borderRadius: 12, paddingVertical: 12, alignItems: "center" }}>
+                      <Text style={{ color: "#fff", fontSize: 15, fontWeight: "600" }}>Νέο</Text>
+                    </Pressable>
+                  </View>
+                </View>
+              ) : (
+                <View style={{ backgroundColor: "rgba(0,0,0,0.85)", borderRadius: 16, padding: 16 }}>
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 12 }}>
+                    <Ionicons name="close-circle" size={24} color={C.red} />
+                    <Text style={{ color: "#fff", fontSize: 16, fontWeight: "700" }}>Προϊόν δεν βρέθηκε</Text>
+                  </View>
+                  <View style={{ flexDirection: "row", gap: 10 }}>
+                    <Pressable
+                      onPress={() => {
+                        setBarcodeResult(null);
+                        setBarcodeMode(false);
+                        router.push("/correct");
+                      }}
+                      style={{ flex: 1, backgroundColor: C.orange, borderRadius: 12, paddingVertical: 12, alignItems: "center" }}
+                    >
+                      <Text style={{ color: "#fff", fontSize: 15, fontWeight: "700" }}>Προσθήκη χειροκίνητα</Text>
+                    </Pressable>
+                    <Pressable onPress={resetBarcode} style={{ flex: 1, backgroundColor: "rgba(255,255,255,0.2)", borderRadius: 12, paddingVertical: 12, alignItems: "center" }}>
+                      <Text style={{ color: "#fff", fontSize: 15, fontWeight: "600" }}>Νέο</Text>
+                    </Pressable>
+                  </View>
+                </View>
+              )}
+            </View>
+          )}
+
+          <View style={{ alignItems: "center", marginTop: "auto", marginBottom: 56 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", width: 260, justifyContent: "space-between" }}>
+              <Pressable onPress={() => setFlash(f => !f)} style={styles.ctrlBtn}>
+                <Ionicons name={flash ? "flash" : "flash-off"} size={22} color="#fff" />
+              </Pressable>
+              <Pressable onPress={() => { setBarcodeMode(false); resetBarcode(); Haptics.selectionAsync(); }} style={{ width: 72, height: 72, borderRadius: 36, borderWidth: 4, borderColor: "#fff", alignItems: "center", justifyContent: "center" }}>
+                <Ionicons name="close" size={30} color="#fff" />
+              </Pressable>
+              <Pressable onPress={() => Haptics.selectionAsync()} style={styles.ctrlBtn}>
+                <Ionicons name="images-outline" size={22} color="#fff" />
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </View>
+    );
+  }
+
   return (
     <View style={{ flex: 1, backgroundColor: "#000" }}>
       {raw === "" ? (
@@ -106,8 +240,8 @@ export default function Scan() {
                 <Pressable onPress={snap} disabled={busy} style={{ width: 72, height: 72, borderRadius: 36, borderWidth: 4, borderColor: "#fff", alignItems: "center", justifyContent: "center", opacity: busy ? 0.5 : 1 }}>
                   <View style={{ width: 56, height: 56, borderRadius: 28, backgroundColor: "#fff" }} />
                 </Pressable>
-                <Pressable onPress={() => Haptics.selectionAsync()} style={styles.ctrlBtn}>
-                  <Ionicons name="images-outline" size={22} color="#fff" />
+                <Pressable onPress={() => { setBarcodeMode(true); resetBarcode(); Haptics.selectionAsync(); }} style={styles.ctrlBtn}>
+                  <Ionicons name="barcode-outline" size={22} color="#fff" />
                 </Pressable>
               </View>
             </View>
@@ -176,6 +310,13 @@ export default function Scan() {
                   <Text style={{ flex: 1, fontSize: 13.5, color: "#8A3D00" }}>Η ανάγνωση δεν ήταν καθαρή — διόρθωσε τα παραπάνω πριν αποθηκεύσεις.</Text>
                 </View>
               )}
+
+              <Pressable
+                onPress={() => router.push({ pathname: "/correct", params: { items: JSON.stringify(parsed.items) } })}
+                style={{ backgroundColor: C.orange, borderRadius: 16, paddingVertical: 16, alignItems: "center", marginBottom: 12 }}
+              >
+                <Text style={{ color: "#fff", fontSize: 17, fontWeight: "800" }}>Διόρθωση</Text>
+              </Pressable>
 
               <Pressable
                 onPress={save}

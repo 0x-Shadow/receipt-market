@@ -18,6 +18,7 @@ create table if not exists products (
   name_el text not null unique,
   category text not null default 'Άλλα',
   emoji text default '🛒',
+  barcode text,
   created_at timestamptz default now()
 );
 
@@ -27,6 +28,8 @@ create table if not exists receipts (
   store_id uuid references stores(id),
   image_url text,
   total numeric,
+  item_count int,
+  parsed_confidence float,
   bought_at timestamptz default now()
 );
 
@@ -36,7 +39,9 @@ create table if not exists prices (
   store_id uuid references stores(id) on delete cascade,
   receipt_id uuid references receipts(id) on delete set null,
   price numeric not null,
-  created_at timestamptz default now()
+  freshness text default 'current' check (freshness in ('current', 'stale', 'outdated')),
+  created_at timestamptz default now(),
+  unique(product_id, store_id, price, created_at::date)
 );
 
 create table if not exists watchlist (
@@ -57,12 +62,20 @@ create table if not exists community_posts (
   created_at timestamptz default now()
 );
 
+create table if not exists profiles (
+  id uuid primary key references auth.users(id) on delete cascade,
+  full_name text,
+  avatar_url text,
+  created_at timestamptz default now()
+);
+
 alter table stores enable row level security;
 alter table products enable row level security;
 alter table receipts enable row level security;
 alter table prices enable row level security;
 alter table watchlist enable row level security;
 alter table community_posts enable row level security;
+alter table profiles enable row level security;
 
 drop policy if exists "public read stores" on stores;
 create policy "public read stores" on stores for select using (true);
@@ -75,13 +88,41 @@ create policy "auth write receipts" on receipts for all using (auth.uid() = user
 drop policy if exists "own watchlist" on watchlist;
 create policy "own watchlist" on watchlist for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 drop policy if exists "auth write prices" on prices;
-create policy "auth write prices" on prices for insert with check (auth.role() = 'authenticated');
+create policy "auth write prices" on prices for insert with check (
+  auth.role() = 'authenticated'
+  and (
+    receipt_id is null
+    or auth.uid() = (select user_id from receipts where id = receipt_id)
+  )
+);
 drop policy if exists "public read community_posts" on community_posts;
 create policy "public read community_posts" on community_posts for select using (true);
 drop policy if exists "auth write community_posts" on community_posts;
 create policy "auth write community_posts" on community_posts for insert with check (auth.role() = 'authenticated');
+drop policy if exists "own profile" on profiles;
+create policy "own profile" on profiles for all using (auth.uid() = id) with check (auth.uid() = id);
 
 create index if not exists community_posts_created_at_idx on community_posts(created_at desc);
+
+-- Mark prices older than 30 days as stale
+create or replace function mark_stale_prices()
+returns trigger
+language plpgsql
+as $$
+begin
+  update prices
+  set freshness = 'stale'
+  where created_at < now() - interval '30 days'
+    and freshness = 'current';
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_mark_stale_prices on prices;
+create trigger trg_mark_stale_prices
+  after insert on prices
+  for each statement
+  execute function mark_stale_prices();
 
 create or replace view price_history as
 select
@@ -91,6 +132,7 @@ select
   p.store_id,
   s.chain as store_chain,
   p.price,
+  p.freshness,
   p.created_at,
   lag(p.price) over (partition by p.product_id, p.store_id order by p.created_at) as previous_price,
   p.price - lag(p.price) over (partition by p.product_id, p.store_id order by p.created_at) as price_change,
@@ -115,7 +157,7 @@ insert into products (name_el, category, emoji) values
 ('ΓΑΛΑ ΦΡΕΣΚΟ 1L','Γαλακτοκομικά','🥛'),
 ('ΓΡΑΒΙΕΡΑ ΚΡΗΤΗΣ','Γαλακτοκομικά','🧀'),
 ('ΓΙΑΟΥΡΤΙ ΣΤΡΑΓΓΙΣΤΟ','Γαλακτοκομικά','🍦'),
-('ΨΩΜΙ ΤΟΣΤ','Αρτοποιία','🍞'),
+('ΨΩΜΙ ΤΟΣΤ','Αρτοποία','🍞'),
 ('ΜΑΚΑΡΟΝΙΑ 500G','Τρόφιμα','🍝'),
 ('ΡΥΖΙ 1KG','Τρόφιμα','🍚'),
 ('ΕΛΑΙΟΛΑΔΟ 1L','Τρόφιμα','🫒'),

@@ -20,6 +20,26 @@ export async function ensurePushPermission(): Promise<string | null> {
   return token;
 }
 
+export async function registerForPushNotifications(): Promise<string | null> {
+  if (!Notifications) return null;
+  const { status } = await Notifications.requestPermissionsAsync();
+  if (status !== "granted") return null;
+  const token = (await Notifications.getExpoPushTokenAsync()).data;
+  return token;
+}
+
+export async function notifyLocal(title: string, body: string): Promise<void> {
+  if (!Notifications) return;
+  await Notifications.scheduleNotificationAsync({
+    content: { title, body },
+    trigger: null,
+  });
+}
+
+export async function notifyPriceDrop(name: string, price: number, old: number, store: string) {
+  await notifyLocal("Πτώση τιμής", formatDrop(name, price, old, store));
+}
+
 export async function toggleWatch(productId: string, targetPrice?: number) {
   if (!supabase) throw new Error("Supabase not configured — add .env");
   const {
@@ -33,12 +53,4 @@ export async function toggleWatch(productId: string, targetPrice?: number) {
       { user_id: user.id, product_id: productId, target_price: targetPrice },
       { onConflict: "user_id,product_id" }
     );
-}
-
-export async function notifyPriceDrop(name: string, price: number, old: number, store: string) {
-  if (!Notifications) return;
-  await Notifications.scheduleNotificationAsync({
-    content: { title: "Πτώση τιμής", body: formatDrop(name, price, old, store) },
-    trigger: null,
-  });
 }

@@ -36,7 +36,7 @@ A live marketing page with an interactive phone mockup: [`docs/index.html`](docs
 
 ## 🏗️ Tech Stack
 
-- **Mobile:** Expo SDK 51 • React Native • TypeScript • Expo Router • NativeWind
+- **Mobile:** Expo SDK 57 • React Native • TypeScript • Expo Router
 - **Backend:** Supabase (Postgres + Auth + Storage + Realtime + Edge Functions)
 - **OCR:** `@react-native-ml-kit/text-recognition` (free, on-device, Greek) + `src/parser/greekReceiptParser.ts`
 - **Push:** Expo Notifications (free)

@@ -2,10 +2,12 @@ import { useCallback, useEffect, useState } from "react";
 import { View, Text, ScrollView, Pressable, Switch, StyleSheet, Linking } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
-import * as Notifications from "expo-notifications";
 import { useRouter } from "expo-router";
 import { supabase, useAuth, signOut } from "../../src/lib/supabase";
 import { C, Group, RowSeparator, ListRow, StatCard, Skeleton } from "../../src/components/Apple";
+
+let Notifications: any = null;
+try { Notifications = require("expo-notifications"); } catch { Notifications = null; }
 
 type Stats = { receipts: number; watched: number; savings: number } | null;
 
@@ -60,7 +62,8 @@ export default function Profile() {
   }, [user, fetchStats]);
 
   useEffect(() => {
-    Notifications.getPermissionsAsync().then(({ status }) => setNotifs(status === "granted"));
+    if (!Notifications) return;
+    Notifications.getPermissionsAsync().then(({ status }: any) => setNotifs(status === "granted"));
   }, []);
 
   async function onToggleNotifs(v: boolean) {
