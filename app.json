@@ -24,6 +24,12 @@
         { "icon": "./assets/icon.png", "color": "#007AFF" }
       ]
     ],
-    "experiments": { "typedRoutes": true }
+    "experiments": { "typedRoutes": true },
+    "favicon": "./assets/favicon.png",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0E0E10"
+    }
   }
 }
