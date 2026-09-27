@@ -1,5 +1,6 @@
 -- receipt-market schema — paste into Supabase SQL Editor, Run.
 -- Postgres + RLS + seed: stores, products (120 Greek), prices, receipts, watchlist.
+-- Storage: Dashboard → Storage → New bucket `receipts`, Private (receipt images).
 
 create extension if not exists "uuid-ossp";
 
