@@ -32,7 +32,7 @@ People who shop at **ΣΚΛΑΒΕΝΙΤΗΣ • LIDL • ΜΑΣΟΥΤΗΣ • Α
 
 ## 🌐 Landing Page
 
-A live marketing page with an interactive phone mockup: [`landing/index.html`](landing/index.html) — open in any browser, no build step.
+A live marketing page with an interactive phone mockup: [`docs/index.html`](docs/index.html) — open in any browser, no build step. Hosted on GitHub Pages.
 
 ## 🏗️ Tech Stack
 

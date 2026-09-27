@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>receipt-market — Ξέρεις πού είναι φθηνότερα;</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=IBM+Plex+Mono:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#FAF5EC;
+  --paper-2:#F3ECDD;
+  --ink:#171310;
+  --ink-soft:#4A4238;
+  --green:#00A86B;
+  --green-deep:#007A4D;
+  --red:#E5484D;
+  --blue:#0D5EAF;
+  --line:rgba(23,19,16,.14);
+  --radius:18px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:'Manrope',sans-serif;
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+::selection{background:var(--green);color:#fff}
+
+/* ---------- receipt paper texture & perforation ---------- */
+.receipt{
+  position:relative;
+  background:
+    radial-gradient(circle at 20% 10%, rgba(23,19,16,.025) 0 2px, transparent 2px) 0 0/90px 90px,
+    radial-gradient(circle at 70% 60%, rgba(23,19,16,.02) 0 2px, transparent 2px) 45px 45px/110px 110px,
+    var(--paper);
+}
+.perf-top,.perf-bottom{
+  height:14px;
+  background:linear-gradient(-45deg, transparent 8px, var(--paper) 0) 0 0/16px 16px repeat-x,
+             linear-gradient(45deg, transparent 8px, var(--paper) 0) 8px 0/16px 16px repeat-x;
+  background-color:transparent;
+  filter:drop-shadow(0 1px 0 var(--line));
+}
+.perf-bottom{transform:scaleY(-1)}
+
+/* ---------- nav ---------- */
+nav{
+  position:sticky;top:0;z-index:50;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:18px 5vw;
+  background:rgba(250,245,236,.85);
+  backdrop-filter:blur(12px);
+  border-bottom:1px dashed var(--line);
+}
+.logo{
+  font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:17px;
+  display:flex;align-items:center;gap:10px;letter-spacing:-.02em;
+}
+.logo .dot{width:10px;height:10px;background:var(--green);border-radius:2px;transform:rotate(45deg)}
+.nav-links{display:flex;gap:28px;font-size:14px;font-weight:600}
+.nav-links a{color:var(--ink-soft);text-decoration:none;transition:color .2s}
+.nav-links a:hover{color:var(--green-deep)}
+.btn{
+  display:inline-flex;align-items:center;gap:8px;
+  font-family:'Manrope',sans-serif;font-weight:800;font-size:15px;
+  padding:13px 26px;border-radius:999px;border:none;cursor:pointer;
+  text-decoration:none;transition:transform .15s, box-shadow .15s, background .2s;
+}
+.btn:hover{transform:translateY(-2px)}
+.btn-dark{background:var(--ink);color:var(--paper)}
+.btn-dark:hover{box-shadow:0 10px 30px -8px rgba(23,19,16,.45)}
+.btn-green{background:var(--green);color:#fff}
+.btn-green:hover{background:var(--green-deep);box-shadow:0 10px 30px -8px rgba(0,168,107,.5)}
+.btn-ghost{background:transparent;color:var(--ink);border:1.5px solid var(--ink)}
+.btn-ghost:hover{background:var(--ink);color:var(--paper)}
+
+/* ---------- hero ---------- */
+.hero{
+  display:grid;grid-template-columns:1.05fr .95fr;
+  gap:4vw;align-items:center;
+  max-width:1240px;margin:0 auto;
+  padding:72px 5vw 90px;
+}
+.hero>*{min-width:0}
+.eyebrow{
+  font-family:'IBM Plex Mono',monospace;font-size:12.5px;font-weight:600;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--green-deep);
+  display:inline-flex;align-items:center;gap:10px;
+  border:1px solid var(--line);border-radius:999px;padding:8px 16px;background:#fff;
+}
+.eyebrow .pulse{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 1.6s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(0,168,107,.5)}50%{box-shadow:0 0 0 7px rgba(0,168,107,0)}}
+h1{
+  font-family:'Archivo Black',sans-serif;
+  font-size:clamp(44px,6.2vw,88px);
+  line-height:.98;letter-spacing:-.02em;
+  margin:26px 0 22px;
+  text-wrap:balance;
+}
+h1 .strike{position:relative;color:var(--ink-soft);white-space:nowrap}
+h1 .strike::after{
+  content:"";position:absolute;left:-2%;top:52%;width:104%;height:.14em;
+  background:var(--red);transform:rotate(-2deg);border-radius:4px;
+}
+h1 .green{color:var(--green-deep)}
+.hero p.lead{
+  font-size:19px;line-height:1.55;color:var(--ink-soft);
+  max-width:52ch;margin-bottom:34px;
+}
+.hero-ctas{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+.hero-note{font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--ink-soft);display:flex;align-items:center;gap:8px}
+.hero-note::before{content:"";width:22px;height:1.5px;background:var(--ink)}
+
+/* live ticker */
+.ticker{
+  margin-top:44px;border-top:1.5px dashed var(--line);border-bottom:1.5px dashed var(--line);
+  padding:14px 0;display:flex;gap:34px;overflow:hidden;white-space:nowrap;
+  font-family:'IBM Plex Mono',monospace;font-size:14px;
+}
+.ticker .item{display:inline-flex;align-items:center;gap:10px;flex-shrink:0}
+.ticker .name{font-weight:600}
+.ticker .old{color:var(--ink-soft);text-decoration:line-through;text-decoration-color:var(--red);text-decoration-thickness:1.5px}
+.ticker .new{color:var(--green-deep);font-weight:700}
+.ticker .store{color:var(--ink-soft)}
+.ticker .arrow{color:var(--green);font-weight:700}
+
+/* ---------- phone mockup ---------- */
+.phone-stage{position:relative;display:flex;justify-content:center;perspective:1400px}
+.phone{
+  width:300px;height:610px;
+  background:#0d0d0f;border-radius:44px;padding:11px;
+  box-shadow:
+    0 60px 120px -30px rgba(23,19,16,.45),
+    0 0 0 2px rgba(23,19,16,.08),
+    inset 0 0 0 2px rgba(255,255,255,.06);
+  transform:rotate(4deg);
+  transition:transform .6s cubic-bezier(.2,.8,.2,1);
+  position:relative;z-index:2;
+}
+.phone:hover{transform:rotate(0deg) translateY(-6px)}
+.phone-screen{
+  width:100%;height:100%;border-radius:34px;overflow:hidden;
+  background:#F9F9FB;display:flex;flex-direction:column;position:relative;
+}
+.phone-notch{
+  position:absolute;top:11px;left:50%;transform:translateX(-50%);
+  width:110px;height:26px;background:#0d0d0f;border-radius:0 0 16px 16px;z-index:20;
+}
+.app-status{
+  height:44px;display:flex;align-items:flex-end;justify-content:space-between;
+  padding:0 26px 6px;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;
+  background:#fff;
+}
+.app-body{flex:1;overflow:hidden;position:relative;display:flex;flex-direction:column}
+.app-header{padding:14px 16px 8px;background:#fff}
+.app-header h3{font-size:21px;font-weight:800;letter-spacing:-.01em}
+.app-search{
+  margin:10px 16px 0;background:#F2F2F7;border-radius:12px;
+  padding:10px 14px;font-size:13px;color:#8A8A8E;
+}
+.app-scroll{flex:1;overflow:hidden;padding:12px 16px 8px;display:flex;flex-direction:column;gap:10px}
+.chips{display:flex;gap:8px;overflow:hidden}
+.chip{
+  font-size:11.5px;font-weight:700;padding:6px 12px;border-radius:999px;
+  background:#F2F2F7;color:#111;white-space:nowrap;
+}
+.chip.active{background:#111;color:#fff}
+.mini-card{
+  background:#fff;border-radius:14px;padding:12px 14px;
+  box-shadow:0 2px 10px rgba(0,0,0,.05);
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+}
+.mini-card .t{font-size:13.5px;font-weight:700}
+.mini-card .c{font-size:11px;color:#8A8A8E;margin-top:2px}
+.badge{
+  font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:700;
+  padding:5px 9px;border-radius:9px;white-space:nowrap;
+}
+.badge.down{background:#E4F8EF;color:var(--green-deep)}
+.badge.up{background:#FDECEC;color:var(--red)}
+.app-tabbar{
+  display:flex;background:#fff;border-top:1px solid #EFEFF2;
+  padding:8px 6px 12px;
+}
+.app-tabbar button{
+  flex:1;background:none;border:none;font-size:10px;font-weight:700;color:#8A8A8E;
+  display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;font-family:'Manrope',sans-serif;
+}
+.app-tabbar button.active{color:#007AFF}
+.app-tabbar .ico{font-size:17px;line-height:1}
+.app-page{display:none;flex:1;flex-direction:column}
+.app-page.active{display:flex}
+.scan-demo{
+  margin:12px 16px;background:#fff;border-radius:14px;padding:12px 14px;
+  font-family:'IBM Plex Mono',monospace;font-size:10.5px;line-height:1.7;color:#333;
+  box-shadow:0 2px 10px rgba(0,0,0,.05);
+}
+.scan-demo .ok{color:var(--green-deep);font-weight:700}
+.scan-demo .meta{color:#9A9AA0}
+.big-scan-btn{
+  margin:auto 16px 12px;background:#111;color:#fff;border:none;border-radius:14px;
+  padding:15px;font-size:14px;font-weight:800;font-family:'Manrope',sans-serif;cursor:pointer;
+}
+.watch-row{display:flex;align-items:center;justify-content:space-between;padding:10px 2px;border-bottom:1px dashed #EFEFF2}
+.watch-row:last-child{border-bottom:none}
+.watch-row .n{font-size:13px;font-weight:700}
+.watch-row .s{font-size:10.5px;color:#8A8A8E}
+.heart{
+  width:30px;height:30px;border-radius:50%;border:1.5px solid #E5484D;background:#fff;
+  color:#E5484D;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:all .2s;
+}
+.heart.on{background:#E5484D;color:#fff;transform:scale(1.08)}
+/* push notification */
+.push{
+  position:absolute;top:52px;left:12px;right:12px;z-index:15;
+  background:rgba(20,20,22,.92);backdrop-filter:blur(8px);
+  border-radius:18px;padding:13px 14px;color:#fff;
+  display:flex;gap:11px;align-items:center;
+  box-shadow:0 16px 40px rgba(0,0,0,.35);
+  transform:translateY(-140%);opacity:0;
+  transition:transform .7s cubic-bezier(.2,.9,.3,1.2), opacity .5s;
+}
+.push.show{transform:translateY(0);opacity:1}
+.push .p-ico{
+  width:36px;height:36px;border-radius:10px;background:var(--green);
+  display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;
+}
+.push .p-title{font-size:11px;font-weight:800;letter-spacing:.02em}
+.push .p-body{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#B9B9C0;margin-top:2px}
+.push .p-body b{color:#4ADE80}
+/* floating price tags around phone */
+.float-tag{
+  position:absolute;z-index:3;
+  font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:13px;
+  background:#fff;border-radius:12px;padding:9px 13px;
+  box-shadow:0 14px 34px -8px rgba(23,19,16,.22);
+  display:flex;align-items:center;gap:8px;
+  animation:floaty 5s ease-in-out infinite;
+}
+.float-tag .arr{color:var(--green)}
+.float-tag.red .arr{color:var(--red)}
+.ft-1{top:60px;left:-8px}
+.ft-2{bottom:150px;right:-14px;animation-delay:-2.2s}
+.ft-3{bottom:40px;left:24px;animation-delay:-3.6s}
+@keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+
+/* ---------- marquee ---------- */
+.marquee{
+  background:var(--ink);color:var(--paper);
+  overflow:hidden;padding:16px 0;
+  transform:rotate(-1.2deg) scale(1.02);
+  border-top:3px solid var(--ink);border-bottom:3px solid var(--ink);
+}
+.marquee-track{display:flex;gap:56px;width:max-content;animation:scroll 26s linear infinite}
+.marquee:hover .marquee-track{animation-play-state:paused}
+@keyframes scroll{to{transform:translateX(-50%)}}
+.marquee .m-item{
+  font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:600;
+  display:flex;align-items:center;gap:12px;white-space:nowrap;
+}
+.marquee .m-item .cut{color:#4ADE80}
+.marquee .m-item .pct{
+  background:var(--green);color:#04160d;font-size:12px;font-weight:700;
+  padding:3px 8px;border-radius:6px;
+}
+.marquee .m-item .store{opacity:.55;font-size:12.5px}
+
+/* ---------- sections ---------- */
+section.block{max-width:1240px;margin:0 auto;padding:110px 5vw}
+.sec-label{
+  font-family:'IBM Plex Mono',monospace;font-size:12.5px;font-weight:600;
+  letter-spacing:.16em;text-transform:uppercase;color:var(--green-deep);
+  display:flex;align-items:center;gap:12px;margin-bottom:18px;
+}
+.sec-label::after{content:"";flex:1;height:1px;background:var(--line)}
+h2{
+  font-family:'Archivo Black',sans-serif;
+  font-size:clamp(34px,4.4vw,60px);line-height:1.02;letter-spacing:-.02em;
+  text-wrap:balance;margin-bottom:20px;
+}
+.sec-sub{font-size:18px;color:var(--ink-soft);max-width:56ch;line-height:1.55}
+
+/* how it works — receipt lines */
+.how{margin-top:56px;border-top:2px solid var(--ink)}
+.how-row{
+  display:grid;grid-template-columns:70px 1fr auto;gap:24px;align-items:baseline;
+  padding:30px 8px;border-bottom:1.5px dashed var(--line);
+  transition:background .2s, padding-left .25s;
+}
+.how-row:hover{background:#fff;padding-left:20px}
+.how-num{
+  font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:700;color:var(--paper);
+  background:var(--ink);width:44px;height:44px;border-radius:12px;
+  display:flex;align-items:center;justify-content:center;
+}
+.how-row h3{font-size:23px;font-weight:800;letter-spacing:-.01em;margin-bottom:6px}
+.how-row p{color:var(--ink-soft);font-size:15.5px;max-width:52ch}
+.how-price{
+  font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:700;color:var(--green-deep);
+  text-align:right;white-space:nowrap;
+}
+.how-price small{display:block;font-size:11px;color:var(--ink-soft);font-weight:500;letter-spacing:.08em;text-transform:uppercase}
+
+/* features */
+.feat-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:56px;
+}
+.feat{
+  background:#fff;border-radius:var(--radius);padding:30px 28px;
+  border:1px solid var(--line);
+  transition:transform .25s, box-shadow .25s;
+  position:relative;overflow:hidden;
+}
+.feat:hover{transform:translateY(-6px);box-shadow:0 24px 50px -18px rgba(23,19,16,.25)}
+.feat .f-ico{
+  width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;
+  font-size:24px;margin-bottom:20px;
+}
+.feat h3{font-size:19px;font-weight:800;margin-bottom:8px;letter-spacing:-.01em}
+.feat p{font-size:14.5px;color:var(--ink-soft);line-height:1.55}
+.feat .f-tag{
+  position:absolute;top:18px;right:-34px;transform:rotate(38deg);
+  background:var(--green);color:#fff;font-family:'IBM Plex Mono',monospace;
+  font-size:10px;font-weight:700;padding:5px 40px;letter-spacing:.1em;
+}
+
+/* stats — big receipt total */
+.total-card{
+  margin-top:70px;background:var(--ink);color:var(--paper);
+  border-radius:26px;padding:56px 6vw;position:relative;overflow:hidden;
+}
+.total-card::before{
+  content:"";position:absolute;inset:0;
+  background:repeating-linear-gradient(0deg,transparent 0 34px,rgba(250,245,236,.045) 34px 35px);
+}
+.total-card .t-label{
+  font-family:'IBM Plex Mono',monospace;font-size:12.5px;letter-spacing:.2em;
+  text-transform:uppercase;color:rgba(250,245,236,.55);
+}
+.total-card .t-big{
+  font-family:'Archivo Black',sans-serif;
+  font-size:clamp(52px,8vw,110px);line-height:1;margin:14px 0 8px;
+}
+.total-card .t-big .cur{color:#4ADE80}
+.total-card .t-sub{font-size:17px;color:rgba(250,245,236,.75);max-width:44ch;line-height:1.5}
+.total-card .t-cols{
+  display:flex;gap:60px;margin-top:44px;flex-wrap:wrap;
+  font-family:'IBM Plex Mono',monospace;
+}
+.total-card .t-col .n{font-size:34px;font-weight:700;color:#4ADE80}
+.total-card .t-col .l{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:rgba(250,245,236,.55);margin-top:4px}
+
+/* final cta */
+.final{
+  text-align:center;padding:130px 5vw 120px;
+}
+.final h2{font-size:clamp(40px,6vw,84px);margin-bottom:18px}
+.final p{font-size:19px;color:var(--ink-soft);margin-bottom:36px}
+.final .hero-ctas{justify-content:center}
+
+/* footer */
+footer{
+  border-top:2px solid var(--ink);
+  padding:44px 5vw 34px;
+  display:flex;justify-content:space-between;align-items:flex-end;gap:30px;flex-wrap:wrap;
+  max-width:1240px;margin:0 auto;
+}
+.barcode{
+  width:150px;height:52px;
+  background:repeating-linear-gradient(90deg,var(--ink) 0 2px,transparent 2px 5px,var(--ink) 5px 6px,transparent 6px 11px,var(--ink) 11px 14px,transparent 14px 17px);
+}
+.foot-thanks{
+  font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--ink-soft);
+  text-align:right;line-height:1.9;
+}
+.foot-thanks b{color:var(--ink)}
+
+/* reveal on scroll */
+.reveal{opacity:0;transform:translateY(34px);transition:opacity .7s ease, transform .7s cubic-bezier(.2,.8,.2,1)}
+.reveal.visible{opacity:1;transform:none}
+
+/* price flash */
+.flash-down{animation:flashDown .8s}
+.flash-up{animation:flashUp .8s}
+@keyframes flashDown{0%{background:#D8F5E8}100%{background:transparent}}
+@keyframes flashUp{0%{background:#FBD9DA}100%{background:transparent}}
+
+/* responsive */
+@media (max-width:960px){
+  .hero{grid-template-columns:1fr;padding-top:48px}
+  .phone-stage{order:-1}
+  .phone{transform:rotate(0deg)}
+  .feat-grid{grid-template-columns:1fr}
+  .nav-links{display:none}
+  .how-row{grid-template-columns:52px 1fr;gap:16px}
+  .how-price{grid-column:2;text-align:left;margin-top:8px}
+  .float-tag{display:none}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important}
+  html{scroll-behavior:auto}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo"><span class="dot"></span>receipt-market</div>
+  <div class="nav-links">
+    <a href="#how">Πώς δουλεύει</a>
+    <a href="#features">Χαρακτηριστικά</a>
+    <a href="#stats">Αποτελέσματα</a>
+  </div>
+  <a class="btn btn-dark" href="#download">Κατέβασε το app</a>
+</nav>
+
+<!-- ================= HERO ================= -->
+<header class="receipt">
+  <div class="perf-top"></div>
+  <div class="hero">
+    <div>
+      <span class="eyebrow"><span class="pulse"></span>Live · Σκλαβενίτης / Lidl / Μασούτης / ΑΒ</span>
+      <h1>Ξέρεις πού είναι<br><span class="strike">ακριβότερα;</span><br><span class="green">Φθηνότερα.</span></h1>
+      <p class="lead">Βγάλε φωτογραφία την απόδειξη. Το app διαβάζει τα πάντα — κατάστημα, προϊόντα, τιμές — και σε ειδοποιεί όταν κάτι που αγαπάς πέσει τιμή αλλού. Χωρίς συνδρομή. Χωρίς κόστος.</p>
+      <div class="hero-ctas">
+        <a class="btn btn-green" href="#download">📸 Βγάλε την πρώτη σου απόδειξη</a>
+        <a class="btn btn-ghost" href="#how">Πώς δουλεύει →</a>
+      </div>
+      <div class="hero-note">0€ OCR · 10 δευτερόλεπτα από φωτό σε τιμή</div>
+
+      <div class="ticker" id="ticker" aria-hidden="true"></div>
+    </div>
+
+    <div class="phone-stage">
+      <div class="float-tag ft-1">ΦΕΤΑ ΠΟΠ <span class="old" style="text-decoration:line-through;color:var(--red)">4,89€</span> <span class="arr">→ 4,39€</span></div>
+      <div class="float-tag red ft-2">ΓΑΛΑ 1L <span class="arr">▲ 2,10€</span></div>
+      <div class="float-tag ft-3">ΜΠΑΝΑΝΕΣ <span class="arr">→ 1,19€</span></div>
+
+      <div class="phone">
+        <div class="phone-notch"></div>
+        <div class="phone-screen">
+          <div class="app-status"><span>9:41</span><span>●●● 5G ▮</span></div>
+          <div class="push" id="push">
+            <div class="p-ico">🔻</div>
+            <div>
+              <div class="p-title">receipt-market · τώρα</div>
+              <div class="p-body">ΦΕΤΑ ΠΟΠ 400G: <b>2,19€</b> στο Lidl (ήταν 2,49€)</div>
+            </div>
+          </div>
+          <div class="app-body">
+            <div class="app-header"><h3 id="appTitle">Αρχική</h3></div>
+            <div class="app-search">Ψάξε γάλα, φέτα…</div>
+            <div class="app-scroll" id="appScroll">
+              <div class="chips">
+                <span class="chip active">Όλα</span><span class="chip">Γαλακτοκομικά</span>
+                <span class="chip">Κρέας & Ψάρι</span><span class="chip">Φρούτα & Λαχανικά</span>
+                <span class="chip">Αρτοποιία</span><span class="chip">Ποτά</span>
+              </div>
+              <div id="page-home" class="app-page active">
+                <div class="mini-card"><div><div class="t">🧀 ΦΕΤΑ ΠΟΠ 400G</div><div class="c">Lidl Μαρούσι · 1,2km</div></div><span class="badge down">▼ 4,39€</span></div>
+                <div class="mini-card"><div><div class="t">🥛 ΓΑΛΑ ΦΡΕΣΚΟ 1L</div><div class="c">Μασούτης Ν. Σμύρνη · 2,8km</div></div><span class="badge down">▼ 1,89€</span></div>
+                <div class="mini-card"><div><div class="t">🍌 ΜΠΑΝΑΝΕΣ 1KG</div><div class="c">Σκλαβενίτης Χαλάνδρι · 3,1km</div></div><span class="badge up">▲ 1,29€</span></div>
+                <div class="mini-card"><div><div class="t">🍞 ΨΩΜΙ ΤΟΣΤ</div><div class="c">ΑΒ Γλυφάδα · 4,0km</div></div><span class="badge down">▼ 2,10€</span></div>
+              </div>
+              <div id="page-scan" class="app-page">
+                <div class="scan-demo">
+                  <span class="meta">ΣΚΛΑΒΕΝΙΤΗΣ ΕΛΛ.ΥΠΕΡΑΓΟΡΕΣ</span><br>
+                  ΦΕΤΑ ΠΟΠ ΗΠΕΙΡΟΣ 400G&nbsp;&nbsp;4,89<br>
+                  ΓΑΛΑ ΦΡΕΣΚΟ ΔΕΛΤΑ 1L&nbsp;&nbsp;&nbsp;1,89<br>
+                  ΨΩΜΙ ΤΟΣΤ ΠΑΠΑΔΟΠΟΥΛΟΥ&nbsp;&nbsp;2,10<br>
+                  <span class="meta">ΣΥΝΟΛΟ&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;8,88</span><br>
+                  <span class="ok">✓ 3 προϊόντα αναγνωρίστηκαν · 98%</span>
+                </div>
+                <button class="big-scan-btn">📷 Βγάλε φωτογραφία</button>
+              </div>
+              <div id="page-watch" class="app-page">
+                <div class="watch-row"><div><div class="n">ΦΕΤΑ ΠΟΠ 400G</div><div class="s">στόχος: 4,50€</div></div><button class="heart on">♥</button></div>
+                <div class="watch-row"><div><div class="n">ΓΑΛΑ ΦΡΕΣΚΟ 1L</div><div class="s">στόχος: 2,00€</div></div><button class="heart on">♥</button></div>
+                <div class="watch-row"><div><div class="n">ΜΠΑΝΑΝΕΣ 1KG</div><div class="s">στόχος: 1,30€</div></div><button class="heart">♥</button></div>
+                <div class="watch-row"><div><div class="n">ΚΑΦΕΣ ΕΛΛΗΝΙΚΟΣ</div><div class="s">στόχος: 5,00€</div></div><button class="heart">♥</button></div>
+              </div>
+              <div id="page-profile" class="app-page">
+                <div class="mini-card"><div><div class="t">Οι αποδείξεις μου</div><div class="c">12 ρεπορτάζ</div></div><span class="badge down">12</span></div>
+                <div class="mini-card"><div><div class="t">Έχεις γλιτώσει</div><div class="c">αυτόν τον μήνα</div></div><span class="badge down">18,40€</span></div>
+              </div>
+            </div>
+            <div class="app-tabbar" id="tabbar">
+              <button class="active" data-page="home" data-title="Αρχική"><span class="ico">🏠</span>Αρχική</button>
+              <button data-page="scan" data-title="Scan"><span class="ico">📸</span>Scan</button>
+              <button data-page="watch" data-title="Λίστα"><span class="ico">🔔</span>Λίστα</button>
+              <button data-page="profile" data-title="Προφίλ"><span class="ico">👤</span>Προφίλ</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="perf-bottom"></div>
+</header>
+
+<!-- ================= MARQUEE ================= -->
+<div class="marquee" aria-hidden="true">
+  <div class="marquee-track" id="marqueeTrack"></div>
+</div>
+
+<!-- ================= HOW ================= -->
+<section class="block receipt" id="how">
+  <div class="perf-top"></div>
+  <div class="sec-label">01 — Πώς δουλεύει</div>
+  <h2>Τρία βήματα.<br>Μία απόδειξη. <span style="color:var(--green-deep)">Μηδέν κόστος.</span></h2>
+  <p class="sec-sub">Καμία εγγραφή με email. Καμία κάρτα. Καμία cloud AI χρέωση — όλη η μαγεία συμβαίνει στο τηλέφωνό σου.</p>
+
+  <div class="how">
+    <div class="how-row reveal">
+      <div class="how-num">01</div>
+      <div>
+        <h3>Βγάλε φωτογραφία την απόδειξη</h3>
+        <p>Από Σκλαβενίτη, Lidl, Μασούτη, ΑΒ ή οποιοδήποpte κατάστημα. Το κάμερα overlay σε βοηθά να πιάσεις το όλο χαρτί.</p>
+      </div>
+      <div class="how-price">2 δευτ.<small>μέσος χρόνος</small></div>
+    </div>
+    <div class="how-row reveal">
+      <div class="how-num">02</div>
+      <div>
+        <h3>Το app διαβάζει τα πάντα μόνο του</h3>
+        <p>Κατάστημα, προϊόντα, τιμές — με on-device OCR και έξυπνο ελληνικό parser. Εσύ απλά επιβεβαιώνεις σε 10 δευτερόλεπτα.</p>
+      </div>
+      <div class="how-price">0€<small>κόστος OCR</small></div>
+    </div>
+    <div class="how-row reveal">
+      <div class="how-num">03</div>
+      <div>
+        <h3>Άκου το «Φθηνότερα!»</h3>
+        <p>Βάλε τα αγαπημένα σου προϊόντα στη λίστα. Όταν η τιμή πέσει σε οποιοδήποτε κατάστημα κοντά σου — push ειδοποίηση αμέσως.</p>
+      </div>
+      <div class="how-price">∞<small>εξοικονόμηση</small></div>
+    </div>
+  </div>
+  <div class="perf-bottom"></div>
+</section>
+
+<!-- ================= FEATURES ================= -->
+<section class="block" id="features">
+  <div class="sec-label">02 — Χαρακτηριστικά</div>
+  <h2>Χτισμένο για την<br>ελληνική αγορά.</h2>
+  <p class="sec-sub">Γνωρίζουμε τι λέει μια ελληνική απόδειξη — από το «ΣΥΝΟΛΟ» μέχρι το ΦΠΑ.</p>
+
+  <div class="feat-grid">
+    <div class="feat reveal">
+      <div class="f-tag">0€</div>
+      <div class="f-ico" style="background:#E4F8EF">🧠</div>
+      <h3>Έξυπνος ελληνικός parser</h3>
+      <p>Αναγνωρίζει Σκλαβενίτη, Lidl, Μασούτη, ΑΒ από το λογότυπο. Διαβάζει τιμές με ελληνικό κόμμα (4,89), προσπερνάει ΦΠΑ και ΣΥΝΟΛΑ, βρίσκει προϊόντα με fuzzy match.</p>
+    </div>
+    <div class="feat reveal">
+      <div class="f-ico" style="background:#E8F1FB">📡</div>
+      <h3>Τιμές σε πραγματικό χρόνο</h3>
+      <p>Κάθε απόδειξη που καταχωρείς ενημερώνει τον χάρτη ζωντανά. Βλέπεις αμέσως ποιο κατάστημα έχει φθηνότερα — χωρίς refresh.</p>
+    </div>
+    <div class="feat reveal">
+      <div class="f-ico" style="background:#FDECEC">🔔</div>
+      <h3>Ειδοποιήσεις Φθηνότερα</h3>
+      <p>«🔻 ΦΕΤΑ ΠΟΠ: 2,19€ στο Lidl (ήταν 2,49€)». Ακριβώς έτσι ακούγεται η ευκαιρία. Μόνο όταν πραγματικά αξίζει.</p>
+    </div>
+    <div class="feat reveal">
+      <div class="f-ico" style="background:#F3ECDD">📸</div>
+      <h3>10 δευτερόλεπτα ανά απόδειξη</h3>
+      <p>Φωτό → αυτόματο διάβασμα → επιβεβαίωση. Ολόκληρη ροή κάτω από 20 δευτερόλεπτα, χωρίς να πληκτρολογείς τίποτα.</p>
+    </div>
+    <div class="feat reveal">
+      <div class="f-ico" style="background:#E4F8EF">🔒</div>
+      <h3>Ιδιωτικό από προεπιλογή</h3>
+      <p>Το OCR τρέχει στο τηλέφωνό σου, όχι σε cloud. Οι αποδείξεις σου είναι ιδιωτικές. Κανένα API key, καμία χρέωση.</p>
+    </div>
+    <div class="feat reveal">
+      <div class="f-ico" style="background:#E8F1FB">🇬🇷</div>
+      <h3>Ελληνικά πρώτα</h3>
+      <p>Κατηγορίες, καταστήματα, προϊόντα και ειδοποιήσεις — όλα στα ελληνικά. Από Γαλακτοκομικά μέχρι Καθαριότητα.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= STATS ================= -->
+<section class="block" id="stats" style="padding-top:0">
+  <div class="total-card reveal">
+    <div class="t-label">ΣΥΝΟΛΟ ΕΞΟΙΚΟΝΟΜΗΣΗΣ</div>
+    <div class="t-big"><span class="cur">18,40€</span></div>
+    <p class="t-sub">Αυτό εξοικονόμησε ο μέσος χρήστης μας στον πρώτο μήνα — απλά βγάζοντας φωτογραφίες αποδείξεων.</p>
+    <div class="t-cols">
+      <div class="t-col"><div class="n" data-count="120">0</div><div class="l">προϊόντα στη βάση</div></div>
+      <div class="t-col"><div class="n" data-count="5">0</div><div class="l">αλυσίδες καταστημάτων</div></div>
+      <div class="t-col"><div class="n" data-count="98">0</div><div class="l">% ακρίβεια OCR</div></div>
+      <div class="t-col"><div class="n" data-count="0">0</div><div class="l">€ κρυφά κόστη</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= FINAL CTA ================= -->
+<section class="final receipt" id="download">
+  <div class="perf-top"></div>
+  <div class="sec-label" style="justify-content:center">Είσαι έτοιμος;</div>
+  <h2>Η επόμενη σου απόδειξη<br>είναι <span style="color:var(--green-deep)">δωρεάν χάρη.</span></h2>
+  <p>Κατέβασε το receipt-market. Βγάλε την πρώτη φωτογραφία. Δες τι συμβαίνει.</p>
+  <div class="hero-ctas">
+    <a class="btn btn-green" href="#">🍎 App Store</a>
+    <a class="btn btn-dark" href="#">▶ Google Play</a>
+  </div>
+  <div class="perf-bottom"></div>
+</section>
+
+<footer>
+  <div>
+    <div class="logo" style="margin-bottom:14px"><span class="dot"></span>receipt-market</div>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink-soft)">Ξέρεις πού είναι φθηνότερα.</div>
+  </div>
+  <div class="barcode" aria-hidden="true"></div>
+  <div class="foot-thanks">
+    <b>ΕΥΧΑΡΙΣΤΟΥΜΕ</b><br>
+    που επέλεξες τη διαφάνεια · 2026
+  </div>
+</footer>
+
+<script>
+/* ---------- live price ticker ---------- */
+const TICKER = [
+  {name:'ΦΕΤΑ ΠΟΠ 400G', old:4.89, now:4.39, store:'Lidl'},
+  {name:'ΓΑΛΑ ΦΡΕΣΚΟ 1L', old:2.10, now:1.89, store:'Μασούτης'},
+  {name:'ΜΠΑΝΑΝΕΣ 1KG', old:1.19, now:1.29, store:'Σκλαβενίτης'},
+  {name:'ΨΩΜΙ ΤΟΣΤ', old:2.40, now:2.10, store:'ΑΒ'},
+  {name:'ΚΑΦΕΣ ΕΛΛΗΝΙΚΟΣ', old:5.60, now:5.10, store:'Lidl'},
+  {name:'ΜΑΚΑΡΟΝΙΑ 500G', old:0.99, now:0.89, store:'Μασούτης'},
+];
+const fmt = n => n.toFixed(2).replace('.',',') + '€';
+const ticker = document.getElementById('ticker');
+function renderTicker(){
+  ticker.innerHTML = TICKER.map(t => {
+    const down = t.now < t.old;
+    return `<span class="item"><span class="name">${t.name}</span>
+      <span class="old">${fmt(t.old)}</span>
+      <span class="arrow">${down ? '▼' : '▲'}</span>
+      <span class="new">${fmt(t.now)}</span>
+      <span class="store">@ ${t.store}</span></span>`;
+  }).join('');
+}
+renderTicker();
+setInterval(() => {
+  const t = TICKER[Math.floor(Math.random()*TICKER.length)];
+  const delta = (Math.random() - 0.55) * 0.12;
+  t.old = t.now;
+  t.now = Math.max(0.49, Math.round((t.now + delta) * 100) / 100);
+  renderTicker();
+}, 3200);
+
+/* ---------- marquee ---------- */
+const track = document.getElementById('marqueeTrack');
+const mHTML = TICKER.map(t => {
+  const pct = Math.round((1 - t.now/t.old) * 100);
+  return `<span class="m-item">${t.name}
+    <span class="cut">${fmt(t.now)}</span>
+    <span class="pct">−${pct}%</span>
+    <span class="store">@ ${t.store}</span></span>`;
+}).join('');
+track.innerHTML = mHTML + mHTML;
+
+/* ---------- phone tabs ---------- */
+const tabbar = document.getElementById('tabbar');
+const appTitle = document.getElementById('appTitle');
+tabbar.addEventListener('click', e => {
+  const btn = e.target.closest('button');
+  if(!btn) return;
+  tabbar.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.app-page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + btn.dataset.page).classList.add('active');
+  appTitle.textContent = btn.dataset.title;
+});
+
+/* ---------- hearts ---------- */
+document.querySelectorAll('.heart').forEach(h => {
+  h.addEventListener('click', () => h.classList.toggle('on'));
+});
+
+/* ---------- push notification loop ---------- */
+const push = document.getElementById('push');
+let pushOn = false;
+setInterval(() => {
+  pushOn = !pushOn;
+  push.classList.toggle('show', pushOn);
+}, 4200);
+
+/* ---------- scroll reveal ---------- */
+const io = new IntersectionObserver(entries => {
+  entries.forEach(en => { if(en.isIntersecting){ en.target.classList.add('visible'); io.unobserve(en.target); } });
+}, {threshold:.12});
+document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+/* ---------- animated counters ---------- */
+const counters = document.querySelectorAll('[data-count]');
+const cio = new IntersectionObserver(entries => {
+  entries.forEach(en => {
+    if(!en.isIntersecting) return;
+    const el = en.target, target = +el.dataset.count, t0 = performance.now();
+    (function step(t){
+      const p = Math.min(1, (t - t0) / 1400);
+      el.textContent = Math.round(target * (1 - Math.pow(1 - p, 3)));
+      if(p < 1) requestAnimationFrame(step);
+    })(t0);
+    cio.unobserve(el);
+  });
+}, {threshold:.6});
+counters.forEach(c => cio.observe(c));
+</script>
+</body>
+</html>
