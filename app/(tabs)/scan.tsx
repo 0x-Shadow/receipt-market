@@ -22,6 +22,10 @@ export default function Scan() {
   }
 
   async function save() {
+    if (!supabase) {
+      Alert.alert("Χωρίς Supabase", "Βάλε τα κλειδιά στο .env για αποθήκευση τιμών.");
+      return;
+    }
     try {
       const { data: store } = await supabase.from("stores").select("id").eq("chain", parsed.storeChain).limit(1).single();
       for (const it of parsed.items) {

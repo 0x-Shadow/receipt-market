@@ -11,11 +11,13 @@ export default function Home() {
   const [items, setItems] = useState<any[]>([]);
 
   useEffect(() => {
-    supabase.from("products").select("id,name_el,category,emoji").limit(30).then(({ data }) => setItems(data ?? []));
-    const ch = supabase.channel("prices-live").on("postgres_changes", { event: "INSERT", schema: "public", table: "prices" }, () => {
-      supabase.from("products").select("id,name_el,category,emoji").limit(30).then(({ data }) => setItems(data ?? []));
+    const sb = supabase;
+    if (!sb) return;
+    sb.from("products").select("id,name_el,category,emoji").limit(30).then(({ data }) => setItems(data ?? []));
+    const ch = sb.channel("prices-live").on("postgres_changes", { event: "INSERT", schema: "public", table: "prices" }, () => {
+      sb.from("products").select("id,name_el,category,emoji").limit(30).then(({ data }) => setItems(data ?? []));
     }).subscribe();
-    return () => { supabase.removeChannel(ch); };
+    return () => { sb.removeChannel(ch); };
   }, []);
 
   const filtered = items.filter(i => (cat === "Όλα" || i.category === cat) && i.name_el.toLowerCase().includes(q.toLowerCase()));

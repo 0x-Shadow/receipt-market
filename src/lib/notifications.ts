@@ -1,5 +1,3 @@
-// src/lib/notifications.ts
-import * as Notifications from "expo-notifications";
 import { supabase } from "./supabase";
 
 export function formatDrop(name: string, price: number, old: number, store: string): string {
@@ -7,7 +5,17 @@ export function formatDrop(name: string, price: number, old: number, store: stri
   return `🔻 ${name}: ${f(price)}€ στο ${store} (ήταν ${f(old)}€)`;
 }
 
+// expo-notifications remote push was removed from Expo Go in SDK 53+.
+// Load it defensively so the app still runs in Expo Go; push works in dev builds.
+let Notifications: any = null;
+try {
+  Notifications = require("expo-notifications");
+} catch {
+  Notifications = null;
+}
+
 export async function ensurePushPermission(): Promise<string | null> {
+  if (!Notifications) return null;
   const { status } = await Notifications.requestPermissionsAsync();
   if (status !== "granted") return null;
   const token = (await Notifications.getExpoPushTokenAsync()).data;
@@ -15,8 +23,16 @@ export async function ensurePushPermission(): Promise<string | null> {
 }
 
 export async function toggleWatch(productId: string, targetPrice?: number) {
-  const { data: { user } } = await supabase.auth.getUser();
+  if (!supabase) throw new Error("Supabase not configured — add .env");
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) throw new Error("Login required");
-  await ensurePushPermission(); // ask only on first watch
-  return supabase.from("watchlist").upsert({ user_id: user.id, product_id: productId, target_price: targetPrice }, { onConflict: "user_id,product_id" });
+  await ensurePushPermission();
+  return supabase
+    .from("watchlist")
+    .upsert(
+      { user_id: user.id, product_id: productId, target_price: targetPrice },
+      { onConflict: "user_id,product_id" }
+    );
 }
