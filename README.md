@@ -30,6 +30,10 @@ People who shop at **ΣΚΛΑΒΕΝΙΤΗΣ • LIDL • ΜΑΣΟΥΤΗΣ • Α
 3. **Λίστα** — your watchlist with ΦΘΗΝΟΤΕΡΑ / ΑΚΡΙΒΟΤΕΡΑ badges
 4. **Προφίλ** — my receipts, savings, settings
 
+## 🌐 Landing Page
+
+A live marketing page with an interactive phone mockup: [`landing/index.html`](landing/index.html) — open in any browser, no build step.
+
 ## 🏗️ Tech Stack
 
 - **Mobile:** Expo SDK 51 • React Native • TypeScript • Expo Router • NativeWind
