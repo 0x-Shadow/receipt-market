@@ -1,5 +1,7 @@
 import { createClient, type SupabaseClient, type Session, type User } from "@supabase/supabase-js";
 import { useCallback, useEffect, useState } from "react";
+import * as WebBrowser from "expo-web-browser";
+import { Linking } from "react-native";
 
 const url = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const anon = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
@@ -21,6 +23,17 @@ export async function signUp(email: string, password: string) {
   const { data, error } = await supabase.auth.signUp({ email, password });
   if (error) throw error;
   return data.session;
+}
+
+export async function signInWithGoogle(): Promise<void> {
+  if (!supabase || !url) throw new Error("Supabase not configured — add .env");
+  const redirectTo = "receipt-market://auth/callback";
+  const authUrl = `${url}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(redirectTo)}`;
+  const result = await WebBrowser.openAuthSessionAsync(authUrl, redirectTo);
+  if (result.type === "success") {
+    const { data, error } = await supabase.auth.getSession();
+    if (error) throw error;
+  }
 }
 
 export async function signOut() {

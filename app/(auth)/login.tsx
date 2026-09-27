@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { View, Text, TextInput, Pressable, StyleSheet, Alert, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
-import { signIn } from "../../src/lib/supabase";
+import { signIn, signInWithGoogle } from "../../src/lib/supabase";
 import { C } from "../../src/components/Apple";
 
 export default function Login() {
@@ -16,6 +16,17 @@ export default function Login() {
       await signIn(email, password);
     } catch (error: any) {
       Alert.alert("Σφάλμα", error.message || "Η σύνδεση απέτυχε");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setLoading(true);
+    try {
+      await signInWithGoogle();
+    } catch (error: any) {
+      Alert.alert("Σφάλμα", error.message || "Η σύνδεση με Google απέτυχε");
     } finally {
       setLoading(false);
     }
@@ -52,6 +63,17 @@ export default function Login() {
           ) : (
             <Text style={styles.buttonText}>Σύνδεση</Text>
           )}
+        </Pressable>
+
+        <View style={styles.dividerContainer}>
+          <View style={styles.dividerLine} />
+          <Text style={styles.dividerText}>ή</Text>
+          <View style={styles.dividerLine} />
+        </View>
+
+        <Pressable style={styles.googleButton} onPress={handleGoogleLogin} disabled={loading}>
+          <Text style={styles.googleIcon}>G</Text>
+          <Text style={styles.googleButtonText}>Σύνδεση με Google</Text>
         </Pressable>
 
         <Pressable onPress={() => router.push("/signup")}>
@@ -107,6 +129,42 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     fontWeight: "600",
+  },
+  dividerContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: 20,
+  },
+  dividerLine: {
+    flex: 1,
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: C.separator,
+  },
+  dividerText: {
+    marginHorizontal: 12,
+    color: C.sub,
+    fontSize: 14,
+  },
+  googleButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#DADCE0",
+    borderRadius: 10,
+    padding: 14,
+    gap: 10,
+  },
+  googleIcon: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#4285F4",
+  },
+  googleButtonText: {
+    fontSize: 16,
+    fontWeight: "500",
+    color: "#1F1F1F",
   },
   link: {
     color: C.tint,
