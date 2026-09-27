@@ -1,9 +1,11 @@
-import { View, Text, Pressable, Animated, StyleSheet, Dimensions, ScrollView } from "react-native";
+import { View, Text, Pressable, Animated, StyleSheet, Dimensions, ImageBackground, ScrollView } from "react-native";
 import { useRef, useState } from "react";
 import { useRouter } from "expo-router";
-import { C } from "../../src/components/Apple";
+import { Ionicons } from "@expo/vector-icons";
 
 const { width } = Dimensions.get("window");
+
+const HERO_IMAGE = "https://images.unsplash.com/photo-1542838132-92c53300491e?w=1200&q=80";
 
 export default function Onboarding() {
   const router = useRouter();
@@ -14,159 +16,213 @@ export default function Onboarding() {
     setPage(next);
     Animated.timing(slideAnim, {
       toValue: -next * width,
-      duration: 300,
+      duration: 320,
       useNativeDriver: true,
     }).start();
   };
 
-  const handleSkip = () => {
-    router.replace("/(tabs)");
-  };
-
-  const handleStart = () => {
-    router.replace("/(tabs)");
-  };
-
-  const isLastPage = page === 2;
+  const handleStart = () => router.replace("/(tabs)");
 
   return (
-    <View style={[styles.container, isLastPage && styles.containerDark]}>
-      <View style={styles.header}>
-        <Pressable onPress={handleSkip} style={styles.skipButton}>
-          <Text style={[styles.skipText, isLastPage && styles.skipTextDark]}>Skip</Text>
-        </Pressable>
-      </View>
+    <View style={styles.container}>
+      <Pressable onPress={handleStart} style={styles.skipButton} hitSlop={12}>
+        <Text style={styles.skipText}>Παράλειψη</Text>
+      </Pressable>
 
-      <Animated.View
-        style={[
-          styles.pagesContainer,
-          { transform: [{ translateX: slideAnim }] },
-        ]}
-      >
-        <View style={[styles.page, { width }]}>
-          <Text style={styles.heading}>Real offers. Real people.</Text>
+      <Animated.View style={[styles.pagesContainer, { transform: [{ translateX: slideAnim }] }]}>
+        <ScrollView style={{ width }} contentContainerStyle={styles.page} showsVerticalScrollIndicator={false} bounces={false}>
+          <Text style={styles.heading}>Πραγματικές προσφορές.{"\n"}Πραγματικοί άνθρωποι.</Text>
           <Text style={styles.subtitle}>
-            Scan products, see the best deals from your area and help others in the community.
+            Βγάλε φωτογραφία τις τιμές, δες τις καλύτερες προσφορές κοντά σου και βοήθησε τους άλλους.
           </Text>
 
-          <View style={styles.phoneMockup}>
-            <View style={styles.phoneNotch} />
-            <View style={styles.phoneContent}>
-              <View style={styles.scanFrame}>
-                <View style={styles.scanCorner} />
-                <View style={[styles.scanCorner, styles.scanCornerTR]} />
-                <View style={[styles.scanCorner, styles.scanCornerBL]} />
-                <View style={[styles.scanCorner, styles.scanCornerBR]} />
+          <View style={styles.heroCard}>
+            <ImageBackground source={{ uri: HERO_IMAGE }} style={styles.heroImage} imageStyle={styles.heroImageRadius} resizeMode="cover">
+              <View style={styles.heroOverlay} />
+              <View style={styles.heroContent}>
+                <View style={styles.heroLogo}>
+                  <Text style={styles.heroLogoEmoji}>🧾</Text>
+                </View>
+                <Text style={styles.heroTitle}>receipt-market</Text>
+                <Text style={styles.heroTagline}>Σκάνε. Οχτώ. Εξοικονόμησε.</Text>
               </View>
-              <View style={styles.scanLine} />
-              <Text style={styles.scanLabel}>Scanning...</Text>
+            </ImageBackground>
+          </View>
+
+          <View style={styles.stepsCard}>
+            <View style={styles.stepRow}>
+              <View style={styles.stepIcon}>
+                <Ionicons name="camera-outline" size={19} color="#1A2233" />
+              </View>
+              <View style={styles.stepTextWrap}>
+                <Text style={styles.stepTitle}>Σκάνε την απόδειξη</Text>
+                <Text style={styles.stepDesc}>Μία φωτογραφία, όλα τα προϊόντα και οι τιμές.</Text>
+              </View>
+            </View>
+            <View style={styles.stepDivider} />
+            <View style={styles.stepRow}>
+              <View style={styles.stepIcon}>
+                <Ionicons name="notifications-outline" size={19} color="#1A2233" />
+              </View>
+              <View style={styles.stepTextWrap}>
+                <Text style={styles.stepTitle}>Μάθε πότε πέφτει τιμή</Text>
+                <Text style={styles.stepDesc}>Ειδοποίηση όταν ένα προϊόν πέσει αλλού.</Text>
+              </View>
+            </View>
+            <View style={styles.stepDivider} />
+            <View style={styles.stepRow}>
+              <View style={styles.stepIcon}>
+                <Ionicons name="heart-outline" size={19} color="#1A2233" />
+              </View>
+              <View style={styles.stepTextWrap}>
+                <Text style={styles.stepTitle}>Πρόσθεσε στη λίστα σου</Text>
+                <Text style={styles.stepDesc}>Παρακολούθησε τα αγαπημένα σου προϊόντα.</Text>
+              </View>
             </View>
           </View>
-        </View>
+        </ScrollView>
 
-        <View style={[styles.page, { width }]}>
-          <Text style={styles.heading}>Track your wishlist.</Text>
+        <ScrollView style={{ width }} contentContainerStyle={styles.page} showsVerticalScrollIndicator={false} bounces={false}>
+          <Text style={styles.heading}>Παρακολούθησε{"\n"}τη λίστα σου.</Text>
           <Text style={styles.subtitle}>
-            Add products you care about and get notified when they go on offer — wherever you are.
+            Πρόσθεσε τα προϊόντα που σε ενδιαφέρουν και ειδοποιήσου όταν πέσουν σε προσφορά.
           </Text>
 
-          <View style={styles.wishlistContainer}>
-            <View style={styles.wishlistCard}>
-              <View style={styles.wishlistItem}>
-                <View style={styles.wishlistIcon}>
-                  <Text style={styles.wishlistIconText}>🍪</Text>
-                </View>
-                <View style={styles.wishlistInfo}>
-                  <Text style={styles.wishlistName}>Oreo Cookies</Text>
-                  <Text style={styles.wishlistStore}>Tesco · 0.3 km</Text>
-                </View>
-                <View style={styles.discountBadge}>
-                  <Text style={styles.discountText}>-40%</Text>
+          <View style={styles.wishlistCard}>
+            <View style={styles.wishlistHeader}>
+              <Text style={styles.wishlistHeaderTitle}>Η λίστα μου</Text>
+              <View style={styles.bellWrap}>
+                <Ionicons name="notifications-outline" size={15} color="#6B7280" />
+              </View>
+            </View>
+
+            <View style={styles.wlItem}>
+              <View style={styles.wlThumb}>
+                <Text style={styles.wlThumbEmoji}>🧀</Text>
+              </View>
+              <View style={styles.wlInfo}>
+                <Text style={styles.wlName}>Φέτα ΠΟΠ 400g</Text>
+                <View style={styles.wlMeta}>
+                  <View style={styles.wlDot} />
+                  <Text style={styles.wlMetaText}>Lidl · 2,4 km</Text>
                 </View>
               </View>
-              <View style={styles.wishlistDivider} />
-              <View style={styles.wishlistItem}>
-                <View style={styles.wishlistIcon}>
-                  <Text style={styles.wishlistIconText}>🫒</Text>
-                </View>
-                <View style={styles.wishlistInfo}>
-                  <Text style={styles.wishlistName}>Olive Oil</Text>
-                  <Text style={styles.wishlistStore}>Sainsbury's · 0.5 km</Text>
-                </View>
-                <View style={styles.discountBadge}>
-                  <Text style={styles.discountText}>-25%</Text>
+              <View style={styles.dropBadge}>
+                <Text style={styles.dropText}>-35%</Text>
+              </View>
+            </View>
+
+            <View style={styles.wlDivider} />
+
+            <View style={styles.wlItem}>
+              <View style={styles.wlThumb}>
+                <Text style={styles.wlThumbEmoji}>🥛</Text>
+              </View>
+              <View style={styles.wlInfo}>
+                <Text style={styles.wlName}>Γάλα Νωπό 1L</Text>
+                <View style={styles.wlMeta}>
+                  <View style={styles.wlDot} />
+                  <Text style={styles.wlMetaText}>Μασούτης · 1,1 km</Text>
                 </View>
               </View>
-              <View style={styles.wishlistDivider} />
-              <View style={styles.wishlistItem}>
-                <View style={styles.wishlistIcon}>
-                  <Text style={styles.wishlistIconText}>💪</Text>
-                </View>
-                <View style={styles.wishlistInfo}>
-                  <Text style={styles.wishlistName}>Protein Bar</Text>
-                  <Text style={styles.wishlistStore}>Boots · 0.8 km</Text>
-                </View>
-                <View style={styles.discountBadge}>
-                  <Text style={styles.discountText}>-30%</Text>
+              <View style={styles.dropBadge}>
+                <Text style={styles.dropText}>-12%</Text>
+              </View>
+            </View>
+
+            <View style={styles.wlDivider} />
+
+            <View style={styles.wlItem}>
+              <View style={styles.wlThumb}>
+                <Text style={styles.wlThumbEmoji}>🍌</Text>
+              </View>
+              <View style={styles.wlInfo}>
+                <Text style={styles.wlName}>Μπανάνες 1kg</Text>
+                <View style={styles.wlMeta}>
+                  <View style={styles.wlDot} />
+                  <Text style={styles.wlMetaText}>Σκλαβενίτης · 3,7 km</Text>
                 </View>
               </View>
             </View>
           </View>
-        </View>
 
-        <View style={[styles.page, { width }]}>
-          <Text style={[styles.heading, styles.headingDark]}>Together we save more.</Text>
-          <Text style={[styles.subtitle, styles.subtitleDark]}>
-            Join a community that shares the best deals, helps each other and makes smart choices.
-          </Text>
-
-          <View style={styles.mapContainer}>
-            <View style={styles.mapPin}>
-              <Text style={styles.mapPinText}>🏷️</Text>
+          <View style={styles.notifPreview}>
+            <View style={styles.notifIcon}>
+              <Ionicons name="arrow-down" size={14} color="#FFFFFF" />
             </View>
-            <View style={[styles.mapPin, styles.mapPin2]}>
-              <Text style={styles.mapPinText}>❤️</Text>
-            </View>
-            <View style={[styles.mapPin, styles.mapPin3]}>
-              <Text style={styles.mapPinText}>🏷️</Text>
-            </View>
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>👤</Text>
-            </View>
-            <View style={[styles.avatar, styles.avatar2]}>
-              <Text style={styles.avatarText}>👤</Text>
-            </View>
-            <View style={[styles.avatar, styles.avatar3]}>
-              <Text style={styles.avatarText}>👤</Text>
-            </View>
-            <View style={styles.dealBadge}>
-              <Text style={styles.dealBadgeText}>-35%</Text>
+            <View style={styles.notifBodyWrap}>
+              <Text style={styles.notifTitle}>Φέτα ΠΟΠ: 2,19€ στο Lidl</Text>
+              <Text style={styles.notifBody}>Ήταν 2,49€ · μόλις τώρα</Text>
             </View>
           </View>
-        </View>
+        </ScrollView>
+
+        <ScrollView style={{ width }} contentContainerStyle={styles.page} showsVerticalScrollIndicator={false} bounces={false}>
+          <Text style={styles.heading}>Μαζί{"\n"}εξοικονομούμε περισσότερα.</Text>
+          <Text style={styles.subtitle}>
+            Γίνε μέλος μιας κοινότητας που μοιράζεται ευκαιρίες, βοηθάει ο ένας τον άλλο και κάνει σοφές επιλογές.
+          </Text>
+
+          <View style={styles.communityCard}>
+            <View style={styles.post}>
+              <View style={styles.avatarWrap}>
+                <Text style={styles.avatarEmoji}>👤</Text>
+              </View>
+              <View style={styles.postInfo}>
+                <Text style={styles.postAuthor}>Μαρία Α.</Text>
+                <Text style={styles.postTime}>πριν 2 ώρες</Text>
+              </View>
+              <View style={styles.postBadge}>
+                <Text style={styles.postBadgeText}>-40%</Text>
+              </View>
+            </View>
+            <Text style={styles.postBody}>Μακαρόνια στο Lidl Χαλάνδρι, μισά. Να πάτε σήμερα.</Text>
+
+            <View style={styles.postDivider} />
+
+            <View style={styles.post}>
+              <View style={[styles.avatarWrap, { backgroundColor: "#E8F4FD" }]}>
+                <Text style={styles.avatarEmoji}>👤</Text>
+              </View>
+              <View style={styles.postInfo}>
+                <Text style={styles.postAuthor}>Νίκος Π.</Text>
+                <Text style={styles.postTime}>πριν 5 ώρες</Text>
+              </View>
+              <View style={styles.postBadge}>
+                <Text style={styles.postBadgeText}>-25%</Text>
+              </View>
+            </View>
+            <Text style={styles.postBody}>Ελαιόλαδο στον ΑΒ Γλυφάδα, από 6,99€.</Text>
+          </View>
+
+          <View style={styles.statsRow}>
+            <View style={styles.statCard}>
+              <Text style={styles.statValue}>1,2k</Text>
+              <Text style={styles.statLabel}>άνθρωποι μοιράζονται ευκαιρίες</Text>
+            </View>
+            <View style={styles.statCard}>
+              <Text style={styles.statValue}>18€</Text>
+              <Text style={styles.statLabel}>μέση εξοικονόμηση</Text>
+            </View>
+          </View>
+        </ScrollView>
       </Animated.View>
 
       <View style={styles.bottomContainer}>
         <View style={styles.dotsContainer}>
           {[0, 1, 2].map((index) => (
-            <View
-              key={index}
-              style={[
-                styles.dot,
-                page === index ? styles.dotActive : styles.dotInactive,
-                isLastPage && page !== index && styles.dotInactiveDark,
-              ]}
-            />
+            <View key={index} style={[styles.dot, page === index ? styles.dotActive : styles.dotInactive]} />
           ))}
         </View>
 
-        {isLastPage ? (
+        {page === 2 ? (
           <Pressable style={styles.getStartedButton} onPress={handleStart}>
-            <Text style={styles.getStartedText}>Get Started</Text>
+            <Text style={styles.getStartedText}>Ξεκίνα τώρα</Text>
+            <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
           </Pressable>
         ) : (
           <Pressable style={styles.arrowButton} onPress={() => goToPage(page + 1)}>
-            <Text style={styles.arrowText}>→</Text>
+            <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
           </Pressable>
         )}
       </View>
@@ -179,304 +235,395 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#FFFFFF",
   },
-  containerDark: {
-    backgroundColor: "#1C1C1E",
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    paddingHorizontal: 20,
-    paddingTop: 60,
-  },
   skipButton: {
-    padding: 8,
+    position: "absolute",
+    top: 58,
+    right: 20,
+    zIndex: 10,
+    padding: 6,
   },
   skipText: {
-    fontSize: 16,
-    color: "#8E8E93",
+    fontSize: 15,
+    color: "#6B7280",
     fontWeight: "500",
-  },
-  skipTextDark: {
-    color: "#8E8E93",
   },
   pagesContainer: {
     flex: 1,
     flexDirection: "row",
   },
   page: {
-    flex: 1,
-    paddingHorizontal: 32,
-    justifyContent: "center",
+    flexGrow: 1,
+    paddingHorizontal: 28,
+    paddingTop: 100,
+    paddingBottom: 24,
   },
   heading: {
-    fontSize: 32,
+    fontSize: 30,
     fontWeight: "700",
-    color: "#1C1C1E",
-    textAlign: "left",
+    color: "#1A2233",
+    letterSpacing: -0.6,
+    lineHeight: 36,
     marginBottom: 12,
   },
-  headingDark: {
-    color: "#FFFFFF",
-  },
   subtitle: {
-    fontSize: 17,
-    color: "#8E8E93",
-    textAlign: "left",
-    lineHeight: 24,
-    marginBottom: 40,
+    fontSize: 15,
+    color: "#6B7280",
+    lineHeight: 22,
+    marginBottom: 26,
   },
-  subtitleDark: {
-    color: "#8E8E93",
-  },
-  phoneMockup: {
-    width: 220,
-    height: 380,
-    backgroundColor: "#F2F2F7",
-    borderRadius: 32,
-    borderWidth: 3,
-    borderColor: "#1C1C1E",
-    alignItems: "center",
+  heroCard: {
+    borderRadius: 24,
     overflow: "hidden",
+    marginBottom: 18,
+    shadowColor: "#0B1220",
+    shadowOpacity: 0.14,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 6,
   },
-  phoneNotch: {
-    width: 100,
-    height: 24,
-    backgroundColor: "#1C1C1E",
-    borderBottomLeftRadius: 12,
-    borderBottomRightRadius: 12,
-    marginTop: 0,
-  },
-  phoneContent: {
-    flex: 1,
+  heroImage: {
+    height: 210,
     width: "100%",
-    alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "space-between",
   },
-  scanFrame: {
-    width: 140,
-    height: 140,
-    position: "relative",
-    alignItems: "center",
-    justifyContent: "center",
+  heroImageRadius: {
+    borderRadius: 24,
   },
-  scanCorner: {
+  heroOverlay: {
     position: "absolute",
-    width: 24,
-    height: 24,
-    borderColor: "#007AFF",
-    borderTopWidth: 3,
-    borderLeftWidth: 3,
     top: 0,
     left: 0,
-  },
-  scanCornerTR: {
-    top: 0,
     right: 0,
-    left: "auto",
-    borderLeftWidth: 0,
-    borderRightWidth: 3,
-  },
-  scanCornerBL: {
     bottom: 0,
-    top: "auto",
-    borderTopWidth: 0,
-    borderBottomWidth: 3,
+    backgroundColor: "rgba(10,18,32,0.34)",
   },
-  scanCornerBR: {
-    bottom: 0,
-    right: 0,
-    top: "auto",
-    left: "auto",
-    borderTopWidth: 0,
-    borderLeftWidth: 0,
-    borderBottomWidth: 3,
-    borderRightWidth: 3,
+  heroContent: {
+    padding: 20,
   },
-  scanLine: {
-    width: 120,
-    height: 2,
-    backgroundColor: "#007AFF",
-    marginTop: 16,
-  },
-  scanLabel: {
-    fontSize: 13,
-    color: "#007AFF",
-    fontWeight: "600",
-    marginTop: 12,
-  },
-  wishlistContainer: {
-    width: "100%",
-  },
-  wishlistCard: {
-    backgroundColor: "#F2F2F7",
-    borderRadius: 20,
-    padding: 16,
-  },
-  wishlistItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 12,
-  },
-  wishlistIcon: {
-    width: 44,
-    height: 44,
+  heroLogo: {
+    width: 40,
+    height: 40,
     borderRadius: 12,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "rgba(255,255,255,0.22)",
     alignItems: "center",
     justifyContent: "center",
-    marginRight: 12,
+    marginBottom: 10,
   },
-  wishlistIconText: {
-    fontSize: 22,
+  heroLogoEmoji: {
+    fontSize: 20,
   },
-  wishlistInfo: {
-    flex: 1,
+  heroTitle: {
+    fontSize: 24,
+    fontWeight: "800",
+    color: "#FFFFFF",
+    letterSpacing: -0.5,
   },
-  wishlistName: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#1C1C1E",
-  },
-  wishlistStore: {
-    fontSize: 13,
-    color: "#8E8E93",
+  heroTagline: {
+    fontSize: 14,
+    color: "rgba(255,255,255,0.88)",
     marginTop: 2,
   },
-  discountBadge: {
-    backgroundColor: "#34C759",
-    borderRadius: 8,
-    paddingHorizontal: 10,
+  stepsCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "#EDF0F4",
+    paddingHorizontal: 16,
     paddingVertical: 4,
   },
-  discountText: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: "#FFFFFF",
+  stepRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 13,
+    paddingVertical: 14,
   },
-  wishlistDivider: {
+  stepIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: "#F1F4F8",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  stepTextWrap: {
+    flex: 1,
+  },
+  stepTitle: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#1A2233",
+  },
+  stepDesc: {
+    fontSize: 12.5,
+    color: "#8A93A2",
+    marginTop: 2,
+    lineHeight: 17,
+  },
+  stepDivider: {
     height: 1,
-    backgroundColor: "#E5E5EA",
-    marginLeft: 56,
+    backgroundColor: "#F1F4F8",
+    marginLeft: 51,
   },
-  mapContainer: {
-    width: "100%",
-    height: 280,
-    backgroundColor: "#2C2C2E",
-    borderRadius: 20,
-    position: "relative",
-    overflow: "hidden",
+  wishlistCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: "#EDF0F4",
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 4,
+    shadowColor: "#0B1220",
+    shadowOpacity: 0.07,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 3,
   },
-  mapPin: {
-    position: "absolute",
+  wishlistHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 6,
+  },
+  wishlistHeaderTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#1A2233",
+    letterSpacing: -0.2,
+  },
+  bellWrap: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    backgroundColor: "#F1F4F8",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  wlItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingVertical: 12,
+  },
+  wlThumb: {
+    width: 46,
+    height: 46,
+    borderRadius: 12,
+    backgroundColor: "#F5F7FA",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  wlThumbEmoji: {
+    fontSize: 22,
+  },
+  wlInfo: {
+    flex: 1,
+  },
+  wlName: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#1A2233",
+  },
+  wlMeta: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    marginTop: 3,
+  },
+  wlDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: "#0A84FF",
+  },
+  wlMetaText: {
+    fontSize: 12,
+    color: "#8A93A2",
+  },
+  dropBadge: {
+    backgroundColor: "#E8F9EE",
+    borderRadius: 8,
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+  },
+  dropText: {
+    fontSize: 12.5,
+    fontWeight: "700",
+    color: "#1F8A4C",
+  },
+  wlDivider: {
+    height: 1,
+    backgroundColor: "#F1F4F8",
+    marginLeft: 58,
+  },
+  notifPreview: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: "#EDF0F4",
+    padding: 14,
+    marginTop: 14,
+    shadowColor: "#0B1220",
+    shadowOpacity: 0.07,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 5 },
+    elevation: 3,
+  },
+  notifIcon: {
+    width: 30,
+    height: 30,
+    borderRadius: 10,
+    backgroundColor: "#1F8A4C",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  notifBodyWrap: {
+    flex: 1,
+  },
+  notifTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#1A2233",
+  },
+  notifBody: {
+    fontSize: 12,
+    color: "#8A93A2",
+    marginTop: 2,
+  },
+  communityCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: "#EDF0F4",
+    padding: 16,
+    shadowColor: "#0B1220",
+    shadowOpacity: 0.07,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 3,
+  },
+  post: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 11,
+    marginBottom: 8,
+  },
+  avatarWrap: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "#3A3A3C",
+    backgroundColor: "#F3ECDD",
     alignItems: "center",
     justifyContent: "center",
-    top: 40,
-    left: 40,
   },
-  mapPin2: {
-    top: 100,
-    right: 60,
-    left: "auto",
-  },
-  mapPin3: {
-    bottom: 60,
-    left: 80,
-    top: "auto",
-  },
-  mapPinText: {
+  avatarEmoji: {
     fontSize: 16,
   },
-  avatar: {
-    position: "absolute",
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "#007AFF",
-    alignItems: "center",
-    justifyContent: "center",
-    top: 160,
-    left: 120,
+  postInfo: {
+    flex: 1,
   },
-  avatar2: {
-    backgroundColor: "#FF9500",
-    top: 80,
-    left: 200,
-  },
-  avatar3: {
-    backgroundColor: "#FF3B30",
-    bottom: 40,
-    right: 40,
-    top: "auto",
-  },
-  avatarText: {
-    fontSize: 18,
-  },
-  dealBadge: {
-    position: "absolute",
-    backgroundColor: "#34C759",
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    top: 140,
-    right: 40,
-  },
-  dealBadgeText: {
+  postAuthor: {
     fontSize: 14,
+    fontWeight: "600",
+    color: "#1A2233",
+  },
+  postTime: {
+    fontSize: 11.5,
+    color: "#A0A8B5",
+    marginTop: 1,
+  },
+  postBadge: {
+    backgroundColor: "#E8F9EE",
+    borderRadius: 8,
+    paddingHorizontal: 9,
+    paddingVertical: 3,
+  },
+  postBadgeText: {
+    fontSize: 12.5,
     fontWeight: "700",
-    color: "#FFFFFF",
+    color: "#1F8A4C",
+  },
+  postBody: {
+    fontSize: 14,
+    color: "#3A4354",
+    lineHeight: 20,
+    marginBottom: 4,
+  },
+  postDivider: {
+    height: 1,
+    backgroundColor: "#F1F4F8",
+    marginVertical: 14,
+  },
+  statsRow: {
+    flexDirection: "row",
+    gap: 12,
+    marginTop: 16,
+  },
+  statCard: {
+    flex: 1,
+    backgroundColor: "#F7F9FC",
+    borderRadius: 18,
+    paddingVertical: 16,
+    paddingHorizontal: 14,
+  },
+  statValue: {
+    fontSize: 22,
+    fontWeight: "800",
+    color: "#1A2233",
+    letterSpacing: -0.5,
+  },
+  statLabel: {
+    fontSize: 12,
+    color: "#8A93A2",
+    marginTop: 3,
+    lineHeight: 16,
   },
   bottomContainer: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 32,
-    paddingBottom: 50,
+    paddingHorizontal: 28,
+    paddingBottom: 42,
+    paddingTop: 8,
   },
   dotsContainer: {
     flexDirection: "row",
-    gap: 8,
+    gap: 7,
+    alignItems: "center",
   },
   dot: {
-    width: 8,
-    height: 8,
+    width: 7,
+    height: 7,
     borderRadius: 4,
   },
   dotActive: {
-    backgroundColor: "#007AFF",
+    backgroundColor: "#0A84FF",
+    width: 20,
   },
   dotInactive: {
-    backgroundColor: "#E5E5EA",
-  },
-  dotInactiveDark: {
-    backgroundColor: "#48484A",
+    backgroundColor: "#DCE1E8",
   },
   arrowButton: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: "#1C1C1E",
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: "#1A2233",
     alignItems: "center",
     justifyContent: "center",
-  },
-  arrowText: {
-    fontSize: 24,
-    color: "#FFFFFF",
-    fontWeight: "600",
   },
   getStartedButton: {
-    paddingHorizontal: 32,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: "#007AFF",
+    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
+    gap: 8,
+    height: 52,
+    paddingHorizontal: 26,
+    borderRadius: 26,
+    backgroundColor: "#0A84FF",
   },
   getStartedText: {
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: "600",
     color: "#FFFFFF",
   },

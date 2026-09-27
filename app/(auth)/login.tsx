@@ -156,7 +156,7 @@ export default function Login() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#1C1C1E",
+    backgroundColor: "#FFFFFF",
   },
   scrollContent: {
     flexGrow: 1,
@@ -168,27 +168,28 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   logoContainer: {
-    width: 80,
-    height: 80,
+    width: 72,
+    height: 72,
     borderRadius: 20,
-    backgroundColor: "#2C2C2E",
+    backgroundColor: "#1A2233",
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 20,
   },
   logoEmoji: {
-    fontSize: 40,
+    fontSize: 34,
   },
   title: {
     fontSize: 28,
     fontWeight: "700",
-    color: "#FFFFFF",
+    color: "#1A2233",
     textAlign: "center",
     marginBottom: 8,
+    letterSpacing: -0.4,
   },
   subtitle: {
     fontSize: 15,
-    color: "#8E8E93",
+    color: "#6B7280",
     textAlign: "center",
   },
   form: {
@@ -197,8 +198,10 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#2C2C2E",
+    backgroundColor: "#FFFFFF",
     borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
     marginBottom: 12,
     paddingHorizontal: 14,
   },
@@ -209,13 +212,13 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 14,
     fontSize: 16,
-    color: "#FFFFFF",
+    color: "#1A2233",
   },
   eyeIcon: {
     padding: 4,
   },
   button: {
-    backgroundColor: "#007AFF",
+    backgroundColor: "#1A2233",
     borderRadius: 12,
     padding: 14,
     alignItems: "center",
@@ -231,7 +234,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   forgotPasswordText: {
-    color: "#007AFF",
+    color: "#1A2233",
     fontSize: 14,
   },
   dividerContainer: {
@@ -242,39 +245,39 @@ const styles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: "#3A3A3C",
+    backgroundColor: "#E5E7EB",
   },
   dividerText: {
     marginHorizontal: 12,
-    color: "#8E8E93",
+    color: "#9CA3AF",
     fontSize: 14,
   },
   googleButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#2C2C2E",
+    backgroundColor: "#FFFFFF",
     borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
     padding: 14,
     gap: 10,
   },
   googleIconContainer: {
     width: 20,
     height: 20,
-    borderRadius: 10,
-    backgroundColor: "#FFFFFF",
     alignItems: "center",
     justifyContent: "center",
   },
   googleG: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: "700",
     color: "#4285F4",
   },
   googleButtonText: {
     fontSize: 16,
     fontWeight: "500",
-    color: "#FFFFFF",
+    color: "#1A2233",
   },
   footer: {
     flexDirection: "row",
@@ -282,12 +285,12 @@ const styles = StyleSheet.create({
     marginTop: 24,
   },
   footerText: {
-    color: "#8E8E93",
+    color: "#6B7280",
     fontSize: 14,
   },
   footerLink: {
-    color: "#007AFF",
+    color: "#1A2233",
     fontSize: 14,
-    fontWeight: "500",
+    fontWeight: "600",
   },
 });

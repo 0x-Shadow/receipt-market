@@ -37,7 +37,7 @@ export default function Signup() {
   return (
     <View style={styles.container}>
       <Pressable style={styles.backButton} onPress={() => router.back()}>
-        <Ionicons name="chevron-back" size={26} color="#FFFFFF" />
+        <Ionicons name="chevron-back" size={26} color="#1A2233" />
       </Pressable>
 
       <View style={styles.content}>
@@ -49,7 +49,7 @@ export default function Signup() {
         <Text style={styles.subtitle}>Εγγραφείτε στην κοινότητά μας και ξεκινήστε να εξοικονομείτε μαζί.</Text>
 
         <View style={styles.inputContainer}>
-          <Ionicons name="person-outline" size={18} color="#8E8E93" style={styles.inputIcon} />
+          <Ionicons name="person-outline" size={18} color="#9CA3AF" style={styles.inputIcon} />
           <TextInput
             style={styles.input}
             placeholder="Ονοματεπώνυμο"
@@ -61,7 +61,7 @@ export default function Signup() {
         </View>
 
         <View style={styles.inputContainer}>
-          <Ionicons name="mail-outline" size={18} color="#8E8E93" style={styles.inputIcon} />
+          <Ionicons name="mail-outline" size={18} color="#9CA3AF" style={styles.inputIcon} />
           <TextInput
             style={styles.input}
             placeholder="Email"
@@ -74,7 +74,7 @@ export default function Signup() {
         </View>
 
         <View style={styles.inputContainer}>
-          <Ionicons name="lock-closed-outline" size={18} color="#8E8E93" style={styles.inputIcon} />
+          <Ionicons name="lock-closed-outline" size={18} color="#9CA3AF" style={styles.inputIcon} />
           <TextInput
             style={styles.input}
             placeholder="Κωδικός"
@@ -84,7 +84,7 @@ export default function Signup() {
             secureTextEntry={!showPassword}
           />
           <Pressable onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
-            <Ionicons name={showPassword ? "eye-outline" : "eye-off-outline"} size={18} color="#8E8E93" />
+            <Ionicons name={showPassword ? "eye-outline" : "eye-off-outline"} size={18} color="#9CA3AF" />
           </Pressable>
         </View>
 
@@ -103,7 +103,7 @@ export default function Signup() {
         </View>
 
         <Pressable style={styles.googleButton} onPress={handleGoogleSignup} disabled={loading}>
-          <Fontisto name="google" size={18} color="#FFFFFF" />
+          <Fontisto name="google" size={18} color="#4285F4" />
           <Text style={styles.googleButtonText}>Συνέχεια με Google</Text>
         </Pressable>
 
@@ -121,7 +121,7 @@ export default function Signup() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#1C1C1E",
+    backgroundColor: "#FFFFFF",
   },
   backButton: {
     position: "absolute",
@@ -140,22 +140,23 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 20,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#1A2233",
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 20,
   },
   logoEmoji: {
-    fontSize: 38,
+    fontSize: 34,
   },
   title: {
-    color: "#FFFFFF",
+    color: "#1A2233",
     fontSize: 28,
     fontWeight: "700",
     textAlign: "center",
+    letterSpacing: -0.4,
   },
   subtitle: {
-    color: "#8E8E93",
+    color: "#6B7280",
     fontSize: 15,
     textAlign: "center",
     marginTop: 6,
@@ -164,7 +165,9 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#2C2C2E",
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
     borderRadius: 12,
     paddingHorizontal: 12,
     marginBottom: 12,
@@ -175,7 +178,7 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    color: "#FFFFFF",
+    color: "#1A2233",
     fontSize: 16,
     paddingVertical: 14,
   },
@@ -183,7 +186,7 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   button: {
-    backgroundColor: "#007AFF",
+    backgroundColor: "#1A2233",
     borderRadius: 12,
     paddingVertical: 15,
     alignItems: "center",
@@ -204,36 +207,38 @@ const styles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: StyleSheet.hairlineWidth,
-    backgroundColor: "#48484A",
+    backgroundColor: "#E5E7EB",
   },
   dividerText: {
     marginHorizontal: 12,
-    color: "#8E8E93",
+    color: "#9CA3AF",
     fontSize: 14,
   },
   googleButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#2C2C2E",
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
     borderRadius: 12,
     paddingVertical: 14,
     width: "100%",
     gap: 10,
   },
   googleButtonText: {
-    color: "#FFFFFF",
+    color: "#1A2233",
     fontSize: 16,
     fontWeight: "500",
   },
   loginText: {
-    color: "#8E8E93",
+    color: "#6B7280",
     fontSize: 14,
     textAlign: "center",
     marginTop: 24,
   },
   loginLink: {
-    color: "#007AFF",
+    color: "#1A2233",
     fontWeight: "600",
   },
 });
