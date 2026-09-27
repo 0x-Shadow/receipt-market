@@ -612,11 +612,7 @@ const ticker = document.getElementById('ticker');
 function renderTicker(){
   ticker.innerHTML = TICKER.map(t => {
     const down = t.now < t.old;
-    return `<span class="item"><span class="name">${t.name}</span>
-      <span class="old">${fmt(t.old)}</span>
-      <span class="arrow">${down ? '▼' : '▲'}</span>
-      <span class="new">${fmt(t.now)}</span>
-      <span class="store">@ ${t.store}</span></span>`;
+    return '<span class="item"><span class="name">' + t.name + '</span> <span class="old">' + fmt(t.old) + '</span> <span class="arrow">' + (down ? '▼' : '▲') + '</span> <span class="new">' + fmt(t.now) + '</span> <span class="store">@ ' + t.store + '</span></span>';
   }).join('');
 }
 renderTicker();
@@ -631,10 +627,7 @@ setInterval(() => {
 const track = document.getElementById('marqueeTrack');
 const mHTML = TICKER.map(t => {
   const pct = Math.round((1 - t.now/t.old) * 100);
-  return `<span class="m-item">${t.name}
-    <span class="cut">${fmt(t.now)}</span>
-    <span class="pct">−${pct}%</span>
-    <span class="store">@ ${t.store}</span></span>`;
+  return '<span class="m-item">' + t.name + ' <span class="cut">' + fmt(t.now) + '</span> <span class="pct">−' + pct + '%</span> <span class="store">@ ' + t.store + '</span></span>';
 }).join('');
 track.innerHTML = mHTML + mHTML;
 
