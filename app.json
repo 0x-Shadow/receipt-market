@@ -1,0 +1,29 @@
+{
+  "expo": {
+    "name": "receipt-market",
+    "slug": "receipt-market",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "receipt-market",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.receiptmarket.app",
+      "cameraUsageDescription": "Βγάλε φωτογραφία την απόδειξη για αυτόματη καταχώρηση τιμών."
+    },
+    "android": {
+      "package": "com.receiptmarket.app",
+      "permissions": ["CAMERA", "NOTIFICATIONS"]
+    },
+    "plugins": [
+      "expo-router",
+      "expo-camera",
+      [
+        "expo-notifications",
+        { "icon": "./assets/icon.png", "color": "#007AFF" }
+      ]
+    ],
+    "experiments": { "typedRoutes": true }
+  }
+}
