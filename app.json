@@ -5,6 +5,7 @@
     "version": "0.1.0",
     "orientation": "portrait",
     "scheme": "receipt-market",
+    "platforms": ["ios", "android", "web"],
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "ios": {

@@ -1,27 +1,42 @@
-import { useState } from "react";
-import { View, Text, Pressable, TextInput, ScrollView, Alert } from "react-native";
-import * as ImagePicker from "expo-image-picker";
+import { useState, useRef } from "react";
+import { View, Text, Pressable, TextInput, ScrollView, Alert, StyleSheet } from "react-native";
+import { CameraView, useCameraPermissions } from "expo-camera";
+import { Ionicons } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
 import TextRecognition from "@react-native-ml-kit/text-recognition";
 import { parseGreekReceipt } from "../../src/parser/greekReceiptParser";
 import { supabase } from "../../src/lib/supabase";
-import { AppleCard } from "../../src/components/Apple";
+import { C, AppleCard, EmojiTile } from "../../src/components/Apple";
+
+const SAMPLE = "ΣΚΛΑΒΕΝΙΤΗΣ\nΦΕΤΑ ΠΟΠ 400G 4,89\nΓΑΛΑ 1L 1,89\nΣΥΝΟΛΟ 6,78";
 
 export default function Scan() {
-  const [raw, setRaw] = useState("ΣΚΛΑΒΕΝΙΤΗΣ\nΦΕΤΑ ΠΟΠ 400G 4,89\nΓΑΛΑ 1L 1,89\nΣΥΝΟΛΟ 6,78");
-  const parsed = parseGreekReceipt(raw);
+  const [permission, requestPermission] = useCameraPermissions();
+  const [raw, setRaw] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [flash, setFlash] = useState(false);
+  const camRef = useRef<CameraView>(null);
+  const parsed = raw ? parseGreekReceipt(raw) : null;
 
-  async function pickAndRecognize() {
-    const res = await ImagePicker.launchCameraAsync({ quality: 0.8 });
-    if (res.canceled) return;
+  async function snap() {
+    if (!camRef.current) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setBusy(true);
     try {
-      const out = await TextRecognition.recognize(res.assets[0].uri);
+      const photo = await camRef.current.takePictureAsync({ quality: 0.8 });
+      const out = await TextRecognition.recognize(photo.uri);
       setRaw(out.text || "");
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       Alert.alert("Δεν διάβασα καλά", "Κράτα σταθερά, καλό φως, ξαναπροσπάθησε.");
+    } finally {
+      setBusy(false);
     }
   }
 
   async function save() {
+    if (!parsed) return;
     if (!supabase) {
       Alert.alert("Χωρίς Supabase", "Βάλε τα κλειδιά στο .env για αποθήκευση τιμών.");
       return;
@@ -29,34 +44,153 @@ export default function Scan() {
     try {
       const { data: store } = await supabase.from("stores").select("id").eq("chain", parsed.storeChain).limit(1).single();
       for (const it of parsed.items) {
-        const { data: prod } = await supabase.from("products").upsert({ name_el: it.name, category: "Άλλα" }, { onConflict: "name_el" }).select("id").single();
+        const { data: prod } = await supabase
+          .from("products")
+          .upsert({ name_el: it.name, category: "Άλλα" }, { onConflict: "name_el" })
+          .select("id")
+          .single();
         if (prod && store) await supabase.from("prices").insert({ product_id: prod.id, store_id: (store as any).id, price: it.price });
       }
-      Alert.alert("Αποθηκεύτηκε ✅", `${parsed.items.length} προϊόντα από ${parsed.storeChain}`);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      Alert.alert("Αποθηκεύτηκε", `${parsed.items.length} προϊόντα από ${parsed.storeChain}`);
+      setRaw("");
     } catch {
-      Alert.alert("Κάτι πήγε στραβά", "Δεν αποθηκεύτηκε — check internet και ξαναπροσπάθησε.");
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      Alert.alert("Κάτι πήγε στραβά", "Έλεγξε το internet και ξαναπροσπάθησε.");
     }
   }
 
-  return (
-    <ScrollView style={{ flex: 1, backgroundColor: "#F9F9FB", padding: 16 }}>
-      <Text style={{ fontSize: 28, fontWeight: "800", marginTop: 40 }}>📸 Scan απόδειξης</Text>
-      <Pressable onPress={pickAndRecognize} style={{ backgroundColor: "#111", borderRadius: 16, padding: 18, marginTop: 12, alignItems: "center" }}>
-        <Text style={{ color: "#fff", fontWeight: "800" }}>📷 Βγάλε φωτογραφία</Text>
-      </Pressable>
-      <TextInput multiline value={raw} onChangeText={setRaw} style={{ backgroundColor: "#fff", borderRadius: 14, padding: 14, minHeight: 140, marginTop: 12, textAlignVertical: "top" }} />
-      <View style={{ marginTop: 12 }}>
-        <AppleCard>
-          <Text style={{ fontWeight: "700" }}>🏪 {parsed.storeChain} ({(parsed.storeConfidence*100).toFixed(0)}%)</Text>
-          <Text>Σύνολο: {parsed.total?.toFixed(2)}€ • Εμπιστοσύνη: {(parsed.confidence*100).toFixed(0)}%</Text>
-          {parsed.storeChain === "Άγνωστο" && <Text style={{ color: "#D64545" }}>Δεν βρήκα κατάστημα 🏪 — έλεγξε την απόδειξη ✍️</Text>}
-          {parsed.items.map((it, i) => <Text key={i}>• {it.name} — {it.price.toFixed(2)}€</Text>)}
-          {parsed.confidence < 0.6 && <Text style={{ color: "#D64545" }}>Δεν διάβασα καλά — διόρθωσε ✍️</Text>}
-        </AppleCard>
+  if (permission && !permission.granted) {
+    return (
+      <View style={{ flex: 1, backgroundColor: "#000", alignItems: "center", justifyContent: "center", padding: 32 }}>
+        <View style={{ width: 72, height: 72, borderRadius: 20, backgroundColor: "rgba(255,255,255,0.12)", alignItems: "center", justifyContent: "center", marginBottom: 20 }}>
+          <Ionicons name="camera-outline" size={34} color="#fff" />
+        </View>
+        <Text style={{ color: "#fff", fontSize: 20, fontWeight: "700", marginBottom: 8 }}>Πρόσβαση στην κάμερα</Text>
+        <Text style={{ color: "rgba(255,255,255,0.6)", fontSize: 15, textAlign: "center", marginBottom: 28 }}>
+          Βγάλε φωτογραφία την απόδειξη για αυτόματο διάβασμα προϊόντων και τιμών.
+        </Text>
+        <Pressable
+          onPress={async () => { await requestPermission(); Haptics.selectionAsync(); }}
+          style={{ backgroundColor: C.tint, paddingHorizontal: 28, paddingVertical: 14, borderRadius: 999 }}
+        >
+          <Text style={{ color: "#fff", fontSize: 16, fontWeight: "700" }}>Ενεργοποίηση</Text>
+        </Pressable>
+        <Pressable onPress={() => setRaw(SAMPLE)} style={{ marginTop: 18 }}>
+          <Text style={{ color: "rgba(255,255,255,0.7)", fontSize: 14 }}>Δοκίμασε με δείγμα απόδειξης</Text>
+        </Pressable>
       </View>
-      <Pressable onPress={save} style={{ backgroundColor: "#007AFF", borderRadius: 16, padding: 18, marginTop: 16, alignItems: "center" }}>
-        <Text style={{ color: "#fff", fontWeight: "800", fontSize: 17 }}>Καταχώρηση ✅</Text>
-      </Pressable>
-    </ScrollView>
+    );
+  }
+
+  return (
+    <View style={{ flex: 1, backgroundColor: "#000" }}>
+      {raw === "" ? (
+        <CameraView ref={camRef} style={{ flex: 1 }} facing="back" flash={flash ? "on" : "off"}>
+          <View style={{ flex: 1 }}>
+            <View style={{ flex: 1, margin: 20, borderRadius: 24, borderWidth: 2, borderColor: "rgba(255,255,255,0.5)", overflow: "hidden", position: "relative" }}>
+              <View style={{ position: "absolute", inset: 0, backgroundColor: "rgba(0,0,0,0.15)" }} />
+              <View style={{ position: "absolute", top: 18, left: 0, right: 0, alignItems: "center" }}>
+                <View style={{ backgroundColor: "rgba(0,0,0,0.55)", paddingHorizontal: 16, paddingVertical: 8, borderRadius: 999 }}>
+                  <Text style={{ color: "#fff", fontSize: 13.5, fontWeight: "600" }}>Στόκασε την απόδειξη 📄</Text>
+                </View>
+              </View>
+            </View>
+
+            <View style={{ alignItems: "center", marginTop: "auto", marginBottom: 56 }}>
+              <View style={{ flexDirection: "row", alignItems: "center", width: 260, justifyContent: "space-between" }}>
+                <Pressable onPress={() => setFlash(f => !f)} style={styles.ctrlBtn}>
+                  <Ionicons name={flash ? "flash" : "flash-off"} size={22} color="#fff" />
+                </Pressable>
+                <Pressable onPress={snap} disabled={busy} style={{ width: 72, height: 72, borderRadius: 36, borderWidth: 4, borderColor: "#fff", alignItems: "center", justifyContent: "center", opacity: busy ? 0.5 : 1 }}>
+                  <View style={{ width: 56, height: 56, borderRadius: 28, backgroundColor: "#fff" }} />
+                </Pressable>
+                <Pressable onPress={() => Haptics.selectionAsync()} style={styles.ctrlBtn}>
+                  <Ionicons name="images-outline" size={22} color="#fff" />
+                </Pressable>
+              </View>
+            </View>
+          </View>
+        </CameraView>
+      ) : (
+        <ScrollView style={{ flex: 1, backgroundColor: C.bg }} contentContainerStyle={{ padding: 16, paddingTop: 70 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+            <Text style={{ fontSize: 26, fontWeight: "800", letterSpacing: -0.4 }}>Αποτέλεσμα</Text>
+            <Pressable onPress={() => { setRaw(""); Haptics.selectionAsync(); }}>
+              <Text style={{ color: C.tint, fontSize: 15, fontWeight: "600" }}>Νέα σάρωση</Text>
+            </Pressable>
+          </View>
+
+          {parsed && (
+            <>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 12 }}>
+                <View style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: 10, backgroundColor: C.card, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10 }}>
+                  <Ionicons name="storefront-outline" size={18} color={C.tint} />
+                  <Text style={{ fontSize: 15, fontWeight: "700" }}>{parsed.storeChain}</Text>
+                  <Text style={{ fontSize: 13, color: C.sub }}>({(parsed.storeConfidence * 100).toFixed(0)}%)</Text>
+                </View>
+                <View style={{ backgroundColor: parsed.confidence > 0.6 ? "rgba(52,199,89,0.12)" : "rgba(255,149,0,0.12)", borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10 }}>
+                  <Text style={{ fontSize: 13, fontWeight: "700", color: parsed.confidence > 0.6 ? "#1F8A4C" : "#B25000" }}>
+                    {(parsed.confidence * 100).toFixed(0)}%
+                  </Text>
+                </View>
+              </View>
+
+              <AppleCard style={{ marginBottom: 14 }}>
+                <Text style={{ fontSize: 13, fontWeight: "700", color: C.sub, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 10 }}>
+                  Προϊόντα · {parsed.items.length}
+                </Text>
+                {parsed.items.length === 0 && (
+                  <Text style={{ fontSize: 14, color: C.sub }}>Δεν βρέθηκαν τιμές — διόρθωσε παρακάτω.</Text>
+                )}
+                {parsed.items.map((it, i) => (
+                  <View key={i}>
+                    {i > 0 && <View style={{ height: StyleSheet.hairlineWidth, backgroundColor: C.separator, marginVertical: 4 }} />}
+                    <View style={{ flexDirection: "row", alignItems: "center", paddingVertical: 6 }}>
+                      <EmojiTile emoji="🧾" size={30} bg="#F2F2F7" />
+                      <TextInput
+                        value={it.name}
+                        onChangeText={v => setRaw(r => r.replace(it.raw, `${v} ${it.price.toFixed(2).replace(".", ",")}`))}
+                        style={{ flex: 1, fontSize: 15, marginLeft: 10, paddingVertical: 4 }}
+                      />
+                      <TextInput
+                        value={it.price.toFixed(2)}
+                        onChangeText={v => setRaw(r => r.replace(it.raw, `${it.name} ${v}`))}
+                        keyboardType="decimal-pad"
+                        style={{ fontSize: 15, fontWeight: "700", width: 70, textAlign: "right", paddingVertical: 4 }}
+                      />
+                    </View>
+                  </View>
+                ))}
+                <View style={{ height: StyleSheet.hairlineWidth, backgroundColor: C.separator, marginVertical: 8 }} />
+                <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+                  <Text style={{ fontSize: 15, fontWeight: "600", color: C.sub }}>Σύνολο</Text>
+                  <Text style={{ fontSize: 20, fontWeight: "800" }}>{parsed.total?.toFixed(2)}€</Text>
+                </View>
+              </AppleCard>
+
+              {parsed.confidence < 0.6 && (
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 8, backgroundColor: "rgba(255,149,0,0.1)", borderRadius: 12, padding: 12, marginBottom: 14 }}>
+                  <Ionicons name="warning-outline" size={18} color="#B25000" />
+                  <Text style={{ flex: 1, fontSize: 13.5, color: "#8A3D00" }}>Η ανάγνωση δεν ήταν καθαρή — διόρθωσε τα παραπάνω πριν αποθηκεύσεις.</Text>
+                </View>
+              )}
+
+              <Pressable
+                onPress={save}
+                disabled={busy}
+                style={{ backgroundColor: C.green, borderRadius: 16, paddingVertical: 16, alignItems: "center", opacity: busy ? 0.6 : 1 }}
+              >
+                <Text style={{ color: "#fff", fontSize: 17, fontWeight: "800" }}>Καταχώρηση ✓</Text>
+              </Pressable>
+            </>
+          )}
+        </ScrollView>
+      )}
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  ctrlBtn: { width: 48, height: 48, borderRadius: 24, backgroundColor: "rgba(255,255,255,0.2)", alignItems: "center", justifyContent: "center" },
+});
