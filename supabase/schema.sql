@@ -141,7 +141,15 @@ create trigger trg_mark_stale_prices
   for each statement
   execute function mark_stale_prices();
 
-create or replace view price_history as
+-- Security invoker so the view honours the querying user's RLS instead of
+-- running with the view owner's privileges (Postgres views are
+-- security-definer by default, which would bypass the table policies below).
+-- Requires Postgres 15+. The drop/recreate avoids CREATE OR REPLACE being
+-- unable to change the security_invoker option on an existing view.
+drop view if exists public.price_history;
+create view public.price_history
+with (security_invoker = true)
+as
 select
   p.id as price_id,
   p.product_id,
@@ -154,9 +162,9 @@ select
   lag(p.price) over (partition by p.product_id, p.store_id order by p.created_at) as previous_price,
   p.price - lag(p.price) over (partition by p.product_id, p.store_id order by p.created_at) as price_change,
   round(((p.price - lag(p.price) over (partition by p.product_id, p.store_id order by p.created_at)) / nullif(lag(p.price) over (partition by p.product_id, p.store_id order by p.created_at), 0)) * 100, 2) as change_percent
-from prices p
-join products pr on pr.id = p.product_id
-join stores s on s.id = p.store_id
+from public.prices p
+join public.products pr on pr.id = p.product_id
+join public.stores s on s.id = p.store_id
 order by p.created_at desc;
 
 -- Seed stores
