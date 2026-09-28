@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<InvoicesDoc xmlns="http://www.aade.gr/myDATA/invoice/v1.0">
+  <invoice>
+    <issuer>
+      <vatNumber>094014201</vatNumber>
+      <name>ΑΒ ΒΑΣΙΛΟΠΟΥΛΟΣ</name>
+      <branch>1</branch>
+    </issuer>
+    <counterpart>
+      <vatNumber>999999999</vatNumber>
+      <name>ΑΝΩΝΥΜΟΣ ΠΕΛΑΤΗ</name>
+    </counterpart>
+    <invoiceHeader>
+      <series>ΤΔΑ-1001</series>
+      <aa>4821</aa>
+      <invoiceType>1.1</invoiceType>
+      <currency>EUR</currency>
+      <issueDate>2026-09-27</issueDate>
+    </invoiceHeader>
+    <invoiceDetails>
+      <lineNumber>1</lineNumber>
+      <quantity>1</quantity>
+      <netValue>4.35</netValue>
+      <vatCategory>1</vatCategory>
+      <vatAmount>0.57</vatAmount>
+      <itemCode>5901234123456</itemCode>
+      <lineComments>ΦΕΤΑ ΠΟΠ 400G</lineComments>
+    </invoiceDetails>
+    <invoiceDetails>
+      <lineNumber>2</lineNumber>
+      <quantity>2</quantity>
+      <netValue>3.00</netValue>
+      <vatCategory>1</vatCategory>
+      <vatAmount>0.39</vatAmount>
+      <itemCode>5909876543210</itemCode>
+      <lineComments>ΓΑΛΑ 1L</lineComments>
+    </invoiceDetails>
+    <mark>400000123456789</mark>
+  </invoice>
+</InvoicesDoc>
