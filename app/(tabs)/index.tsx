@@ -244,7 +244,7 @@ export default function Home() {
         ) : null}
         <View style={styles.heroOverlay} />
         <View style={styles.heroText}>
-          <Text style={styles.heroTitle}>Real deals. Real people.</Text>
+          <Text style={styles.heroTitle}>Φθηνά. Χωρίς μπάζα.</Text>
           <Text style={styles.heroSubtitle}>Σκάνε, βρες τις καλύτερες τιμές και βοήθησε την κοινότητα.</Text>
         </View>
       </View>
@@ -285,23 +285,26 @@ export default function Home() {
         </ScrollView>
       ) : null}
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipsRow}>
-        {cats.map((c) => {
-          const active = cat === c;
-          return (
-            <Pressable
-              key={c}
-              onPress={() => {
-                setCat(c);
-                void Haptics.selectionAsync();
-              }}
-              style={[styles.chip, active ? styles.chipActive : styles.chipInactive]}
-            >
-              <Text style={active ? styles.chipTextActive : styles.chipTextInactive}>{c}</Text>
-            </Pressable>
-          );
-        })}
-      </ScrollView>
+      <View>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipsRow}>
+          {cats.map((c) => {
+            const active = cat === c;
+            return (
+              <Pressable
+                key={c}
+                onPress={() => {
+                  setCat(c);
+                  void Haptics.selectionAsync();
+                }}
+                style={[styles.chip, active ? styles.chipActive : styles.chipInactive]}
+              >
+                <Text style={active ? styles.chipTextActive : styles.chipTextInactive}>{c}</Text>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+        <View pointerEvents="none" style={styles.chipsFade} />
+      </View>
 
       {!loading && items.length === 0 ? null : <Text style={styles.listTitle}>Όλα τα προϊόντα</Text>}
 
@@ -387,7 +390,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 16,
-    paddingBottom: 150,
+    paddingBottom: 130,
   },
   header: {
     marginTop: 56,
@@ -570,8 +573,17 @@ const styles = StyleSheet.create({
   },
   chipsRow: {
     gap: 8,
-    paddingRight: 16,
+    paddingRight: 40,
     marginTop: 18,
+  },
+  chipsFade: {
+    position: "absolute",
+    right: 0,
+    top: 0,
+    bottom: 0,
+    width: 36,
+    backgroundColor: T.bg,
+    opacity: 0.92,
   },
   chip: {
     paddingHorizontal: 16,

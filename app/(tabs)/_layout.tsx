@@ -19,11 +19,11 @@ const ACTIVE = TINT;
 const INACTIVE = "#8E8E93";
 const ACTIVE_ON_CAMERA = "#FFFFFF";
 const INACTIVE_ON_CAMERA = "rgba(255,255,255,0.62)";
-const BLOB_H = 40;
-const BLOB_W = 40;
-const BLOB_MIN_W = 18;
-const BLOB_TOP = 8;
-const DOT_SIZE = 10;
+const BLOB_H = 44;
+const BLOB_W = 52;
+const BLOB_MIN_W = 22;
+const BLOB_TOP = 5;
+const DOT_SIZE = 8;
 
 type Cell = { x: number; width: number };
 
@@ -138,8 +138,8 @@ function FloatingTabBar({ state, navigation }: any) {
                     <View style={styles.iconWrap}>
                       <Ionicons
                         name={focused ? meta.icon : (`${meta.icon}-outline` as any)}
-                        size={24}
-                        color={focused && !onCamera ? "#FFFFFF" : color}
+                        size={23}
+                        color={color}
                       />
                     </View>
                     <Animated.Text style={[styles.label, { color }]}>Scan</Animated.Text>
@@ -158,8 +158,8 @@ function FloatingTabBar({ state, navigation }: any) {
                 >
                   <View style={styles.iconWrap}>
                     <Ionicons
-                      name={focused ? meta.icon : (`${meta.icon}-outline` as any)}
-                      size={24}
+                      name={`${meta.icon}-outline` as any}
+                      size={23}
                       color={color}
                     />
                   </View>
@@ -199,15 +199,15 @@ export default function Layout() {
 const styles = StyleSheet.create({
   wrap: {
     position: "absolute",
-    left: 20,
-    right: 20,
+    left: 16,
+    right: 16,
     bottom: 22,
-    height: 96,
+    height: 84,
     justifyContent: "flex-end",
   },
   pill: {
-    height: 90,
-    borderRadius: 30,
+    height: 76,
+    borderRadius: 26,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: "rgba(0,0,0,0.08)",
     backgroundColor: "rgba(255,255,255,0.86)",
@@ -219,7 +219,7 @@ const styles = StyleSheet.create({
   },
   clip: {
     ...StyleSheet.absoluteFill,
-    borderRadius: 30,
+    borderRadius: 26,
     overflow: "hidden",
   },
   base: {
@@ -238,7 +238,7 @@ const styles = StyleSheet.create({
     gap: 3,
   },
   iconWrap: {
-    height: 40,
+    height: 36,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -246,27 +246,19 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 2,
-    paddingHorizontal: 6,
-    paddingVertical: 4,
+    paddingHorizontal: 2,
+    paddingVertical: 3,
   },
   label: {
-    fontSize: 10,
+    fontSize: 9.5,
     fontWeight: "600",
-  },
-  scanCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "#1A2233",
-    alignItems: "center",
-    justifyContent: "center",
   },
   overlay: {
     position: "absolute",
     left: 0,
     right: 0,
     bottom: 0,
-    height: 90,
+    height: 76,
   },
   blob: {
     position: "absolute",
@@ -275,13 +267,10 @@ const styles = StyleSheet.create({
     width: BLOB_W,
     height: BLOB_H,
     borderRadius: BLOB_H / 2,
-    backgroundColor: "rgba(10,132,255,0.16)",
-    borderWidth: 1.5,
-    borderColor: "rgba(10,132,255,0.22)",
+    backgroundColor: "rgba(10,132,255,0.13)",
   },
   blobDark: {
-    backgroundColor: "rgba(10,132,255,0.20)",
-    borderColor: "rgba(10,132,255,0.30)",
+    backgroundColor: "rgba(10,132,255,0.22)",
   },
   dot: {
     position: "absolute",
@@ -291,8 +280,6 @@ const styles = StyleSheet.create({
     height: DOT_SIZE,
     borderRadius: DOT_SIZE / 2,
     backgroundColor: TINT,
-    borderWidth: 2,
-    borderColor: "rgba(255,255,255,0.95)",
   },
   pillDark: {
     borderColor: "rgba(255,255,255,0.18)",

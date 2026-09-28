@@ -94,7 +94,7 @@ export default function Profile() {
   const initial = (displayName || "?").charAt(0).toUpperCase();
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: C.bg }} contentContainerStyle={{ padding: 16, paddingBottom: 320 }}>
+    <ScrollView style={{ flex: 1, backgroundColor: C.bg }} contentContainerStyle={{ padding: 16, paddingBottom: 130 }}>
       <View style={{ marginTop: 56, marginBottom: 20 }}>
         <Text style={{ fontSize: 34, fontWeight: "800", letterSpacing: -0.5 }}>Προφίλ</Text>
       </View>

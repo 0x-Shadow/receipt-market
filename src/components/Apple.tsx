@@ -142,13 +142,15 @@ export function EmptyState({
   onAction?: () => void;
 }) {
   return (
-    <View style={{ alignItems: "center", paddingVertical: 48, paddingHorizontal: 32 }}>
+    <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingVertical: 24, paddingHorizontal: 32, paddingBottom: 80 }}>
       <View
         style={{
           width: 72,
           height: 72,
           borderRadius: 36,
-          backgroundColor: C.bg,
+          backgroundColor: C.card,
+          borderWidth: StyleSheet.hairlineWidth,
+          borderColor: C.separator,
           alignItems: "center",
           justifyContent: "center",
           marginBottom: 16,
