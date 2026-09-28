@@ -30,7 +30,7 @@ constraint the schema is built around.
 |---|----------|-----------|
 | D1 | **Extract-and-discard** | Store only `(product, price, store, date, qty, unit, VAT)`. Discard AFM, customer name, totals, full line text, and the raw document. |
 | D2 | **Exact last price**, anonymous | Public price is the most recent real observation, not a blurred average. Protected by an anonymity rule, not by coarsening. |
-| D3 | **Barcode-first product identity** | EAN when present; else normalized name+size proposes a candidate; low confidence creates an *unverified* product needing human merge. |
+| D3 | **Chain-scoped code first, description as fallback** | Corrected: myDATA lines carry no EAN (see §5). A line resolves via `itemCode` within its chain, else via normalized description. Low confidence creates an *unverified* product needing human merge. |
 | D4 | **Private history + alerts as the incentive** | Users get their own permanent receipt/price record and drop alerts. Public price graph is the side effect. |
 | D5 | **On-device parse, server validates** | The fiscal document never reaches our infrastructure. A Supabase Edge Function is the trust boundary. |
 
@@ -91,9 +91,12 @@ alter table products
   add column if not exists size_value numeric,
   add column if not exists size_unit text,
   add column if not exists name_normalized text,
+  add column if not exists taric text,
   add column if not exists merged_into uuid references products(id);
 
--- Retailer codes and EANs. One product may carry many codes across chains.
+-- Retailer codes. One product may carry many, one per chain. myDATA itemCode is
+-- max 10 chars and is NOT an EAN; `code_type='retailer'` is the only kind
+-- receipts produce today. 'ean' is reserved for user-scanned product barcodes.
 create table if not exists product_codes (
   id uuid primary key default uuid_generate_v4(),
   product_id uuid not null references products(id) on delete cascade,
@@ -177,33 +180,58 @@ For each line in the detailed document, map:
 
 | myDATA field | Destination |
 |---|---|
-| `lineDescription` | `receipt_items.description_raw`; normalized into `products.name_normalized` |
-| `lineNetAmount` / `lineTotalAmount` | `price` — **net** (`lineNetAmount`) is stored as the comparable figure, because tax is the same for everyone in Greece and a gross comparison across different VAT rates is misleading. The UI shows both: "4,89€ (5,13€ με ΦΠΑ 13%)". |
-| `lineQuantity` + `measureUnit` | `qty`, `unit` |
-| `lineVatCategory` → `vatRate` | `vat_rate` |
-| `lineItemCode` | `product_codes(code, code_type='retailer', chain)` |
-| `lineBarcode` (when present) | `product_codes(code, code_type='ean')` |
-| `counterVatNumber` + issuer name | resolve or create `stores` |
-| `invoiceDate` | `bought_at` |
-| `MARK` | `receipts.mydata_mark` |
+| `invoiceDetails[]` | the line array (note: **not** `invoiceLines`) |
+| `lineComments` | description — **primary** source; Greek retail ERPs put the product name here |
+| `itemDescr` | description fallback; only populated for special tax-free documents |
+| `itemCode` (max 10 chars) | `product_codes(code, code_type='retailer', chain)` |
+| `TaricNo` (max 10 chars) | `products.taric` — an HS code, useful for category, **not** a consumer barcode |
+| `netValue` | `price` — net line value, the comparable figure. VAT is uniform across Greek retailers, and gross figures across different VAT categories mislead. UI shows both: "4,89€ · 5,13€ με ΦΠΑ". |
+| `quantity` + `measurementUnit` | `qty`, `unit`. `measurementUnit` is an int (1/2/3), mapped to a label. Unit price = `netValue / quantity` when quantity > 1. |
+| `vatCategory` | `vat_rate` **via lookup** — it is a category, not a rate: 1→13%, 2→9%, 3→5%, 4→0%, 5→4%, 6→0%, 7→0%, 8→no VAT. |
+| `vatAmount` | cross-check only; a mismatch with the category means a malformed line, which is rejected |
+| `issuer.vatNumber` + `issuer.name` | resolve or create `stores` |
+| `invoiceHeader.issueDate` | `bought_at` |
+| `invoiceHeader.series` + `aa` | `receipt_hash` input |
+| `mark` | `receipts.mydata_mark` |
+| `counterpart.vatNumber` | **discarded.** For B2C retail receipts this is the literal `999999999` |
+| `uid`, `authenticationCode` | discarded — not needed, and `uid` is a service-computed identifier |
 
-`receipt_hash` = SHA-256 over `(issuer VAT, date, series, serial, MARK)`. This
+`receipt_hash` = SHA-256 over `(issuer VAT, issueDate, series, aa, mark)`. This
 dedups re-scans without storing anything that identifies the document. It is a
-one-way hash of already-public-ish fields, not of the receipt.
+one-way hash of already-public fields, not of the receipt.
+
+### Correction: receipt lines carry no EAN barcode
+
+The documented `InvoiceRowType` has `itemCode` (10 chars) and `TaricNo` (10 chars).
+Neither is an EAN-13. **There is no `lineBarcode` field.** An earlier draft of this
+spec assumed one; that was wrong.
+
+Consequence for D3: the barcode-first strategy applies to the *user scanning a
+product in a shop*, not to receipt ingestion. A receipt line can only be identified
+by a chain-scoped `itemCode` or by its normalized description. Price history is
+therefore built from description matching, which is the fragile path — so the
+unverified queue and human merge in D3 carry more weight than originally planned,
+and every chain's own code is preserved precisely so merging is possible later.
 
 ## 6. Product identity (D3)
 
-1. Line has a barcode → look up `product_codes(code_type='ean')` → exact hit, done.
-2. Else look up `product_codes(chain, code_type='retailer')` → hit, done.
-3. Else normalize the description (strip accents, case, punctuation, common retail
-   noise, canonicalize units) and query `products.name_normalized`.
-4. Merge only on an **exact** match of the normalized string, or when the token
+1. Line has an `itemCode` → look up `product_codes(chain, code, 'retailer')` →
+   exact hit, done. This is the reliable path and covers repeat purchases from the
+   same chain.
+2. Else normalize the description (from `lineComments`, falling back to
+   `itemDescr`): strip accents, case, punctuation, common retail noise, and
+   canonicalize units. Query `products.name_normalized`.
+3. Merge only on an **exact** match of the normalized string, or when the token
    sets are identical after unit canonicalization (e.g. `γαλα 1l` ≡ `γαλα φρεσκο 1 lt`).
    Anything fuzzier than that — partial token overlap, different pack sizes, brand
    variants — creates a new unverified product rather than guessing. A wrong merge
    silently corrupts a price series forever; a missed merge is recoverable by a
    human in seconds. Deliberately biased toward false negatives.
-5. No/weak match → create `products(verified = false)` and index it for merge review.
+4. No/weak match → create `products(verified = false)` and index it for merge review.
+
+When a new line creates an unverified product, its `itemCode` is still recorded
+against that product for its chain. So the *second* receipt from the same chain
+resolves exactly at step 1, and a human only has to reconcile across chains once.
 
 `products(verified = false)` is a real state, not a placeholder. Unverified
 products are excluded from public price comparison until merged, so a bad early
