@@ -168,10 +168,16 @@ export default function Home() {
     };
   }, []);
 
-  const cats = useMemo(
-    () => ["Όλα", ...Array.from(new Set(items.map((i) => i.category).filter(Boolean))).sort((a, b) => a.localeCompare(b, "el"))],
-    [items]
-  );
+  const cats = useMemo(() => {
+    const fromData = Array.from(new Set(items.map((i) => i.category).filter(Boolean))).sort((a, b) =>
+      a.localeCompare(b, "el")
+    );
+    const all = ["Όλα", ...fromData];
+    for (const c of ["Γαλακτοκομικά", "Κρέας & Ψάρι", "Φρούτα & Λαχανικά", "Αρτοποιία", "Τρόφιμα", "Ποτά", "Καθαριότητα"]) {
+      if (!all.includes(c)) all.push(c);
+    }
+    return all;
+  }, [items]);
 
   const filtered = items.filter(
     (i) => (cat === "Όλα" || i.category === cat) && i.name_el.toLowerCase().includes(q.trim().toLowerCase())

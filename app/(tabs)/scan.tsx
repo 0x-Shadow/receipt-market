@@ -428,9 +428,9 @@ export default function Scan() {
           onBarcodeScanned={handleBarcodeScan}
         />
         <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, pointerEvents: "box-none" }}>
-          <View style={{ flex: 1, margin: 20, borderRadius: 24, borderWidth: 2, borderColor: "rgba(255,255,255,0.5)", overflow: "hidden", position: "relative" }}>
-            <View style={{ position: "absolute", inset: 0, backgroundColor: "rgba(0,0,0,0.15)" }} />
-            <BarcodeScanOverlay />
+          <View style={{ flex: 1, margin: 20, marginBottom: 168, borderRadius: 24, borderWidth: 2, borderColor: "rgba(255,255,255,0.5)", overflow: "hidden", position: "relative" }}>
+              <View style={{ position: "absolute", inset: 0, backgroundColor: "rgba(0,0,0,0.15)" }} />
+              <BarcodeScanOverlay />
             <View style={{ position: "absolute", top: 18, left: 0, right: 0, alignItems: "center" }}>
               <View style={{ backgroundColor: "rgba(0,0,0,0.55)", paddingHorizontal: 16, paddingVertical: 8, borderRadius: 999 }}>
                 <Text style={{ color: "#fff", fontSize: 13.5, fontWeight: "600" }}>Στόκασε τον barcode 📦</Text>
@@ -439,7 +439,7 @@ export default function Scan() {
           </View>
 
           {barcodeResult && (
-            <View style={{ position: "absolute", bottom: 120, left: 20, right: 20 }}>
+            <View style={{ position: "absolute", bottom: 244, left: 20, right: 20 }}>
               {barcodeResult.found ? (
                 <SuccessAnimation>
                   <View style={{ backgroundColor: "rgba(0,0,0,0.85)", borderRadius: 16, padding: 16 }}>
@@ -482,7 +482,7 @@ export default function Scan() {
             </View>
           )}
 
-          <View style={{ alignItems: "center", marginTop: "auto", marginBottom: 56 }}>
+          <View style={{ alignItems: "center", marginTop: "auto", marginBottom: 150 }}>
             <View style={{ flexDirection: "row", alignItems: "center", width: 260, justifyContent: "space-between" }}>
               <Pressable onPress={() => setFlash(f => !f)} style={styles.ctrlBtn}>
                 <Ionicons name={flash ? "flash" : "flash-off"} size={22} color="#fff" />
@@ -506,7 +506,7 @@ export default function Scan() {
         <View style={{ flex: 1 }}>
           <CameraView style={{ flex: 1 }} facing="back" flash={flash ? "on" : "off"} ref={camRef} />
           <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, pointerEvents: "box-none" }}>
-            <View style={{ flex: 1, margin: 20, borderRadius: 24, borderWidth: 2, borderColor: "rgba(255,255,255,0.5)", overflow: "hidden", position: "relative" }}>
+            <View style={{ flex: 1, margin: 20, marginBottom: 168, borderRadius: 24, borderWidth: 2, borderColor: "rgba(255,255,255,0.5)", overflow: "hidden", position: "relative" }}>
               <View style={{ position: "absolute", inset: 0, backgroundColor: "rgba(0,0,0,0.15)" }} />
               <ReceiptScanOverlay />
               <View style={{ position: "absolute", top: 18, left: 0, right: 0, alignItems: "center" }}>
@@ -516,7 +516,7 @@ export default function Scan() {
               </View>
             </View>
 
-            <View style={{ alignItems: "center", marginTop: "auto", marginBottom: 56 }}>
+            <View style={{ alignItems: "center", marginTop: "auto", marginBottom: 150 }}>
               <View style={{ flexDirection: "row", alignItems: "center", width: 260, justifyContent: "space-between" }}>
                 <Pressable onPress={() => setFlash(f => !f)} style={styles.ctrlBtn}>
                   <Ionicons name={flash ? "flash" : "flash-off"} size={22} color="#fff" />
@@ -532,7 +532,7 @@ export default function Scan() {
           </View>
         </View>
       ) : (
-        <ScrollView style={{ flex: 1, backgroundColor: C.bg }} contentContainerStyle={{ padding: 16, paddingTop: 70 }}>
+        <ScrollView style={{ flex: 1, backgroundColor: C.bg }} contentContainerStyle={{ padding: 16, paddingTop: 70, paddingBottom: 130 }}>
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
             <Text style={{ fontSize: 26, fontWeight: "800", letterSpacing: -0.4 }}>Αποτέλεσμα</Text>
             <Pressable onPress={() => { setRaw(""); Haptics.selectionAsync(); }}>

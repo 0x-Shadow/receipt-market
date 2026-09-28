@@ -185,7 +185,7 @@ export default function Community() {
           data={posts}
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
-          contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 100 }}
+          contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 130 }}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={C.tint} />}
         />
       )}
@@ -253,7 +253,7 @@ export default function Community() {
 const styles = StyleSheet.create({
   fab: {
     position: "absolute",
-    bottom: 24,
+    bottom: 122,
     right: 16,
     flexDirection: "row",
     alignItems: "center",

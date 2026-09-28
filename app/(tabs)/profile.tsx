@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { View, Text, ScrollView, Pressable, Switch, StyleSheet, Linking } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
+import Constants from "expo-constants";
 import { useRouter } from "expo-router";
 import { supabase, useAuth, signOut } from "../../src/lib/supabase";
 import { registerForPushNotifications } from "../../src/lib/notifications";
@@ -93,7 +94,7 @@ export default function Profile() {
   const initial = (displayName || "?").charAt(0).toUpperCase();
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: C.bg }} contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
+    <ScrollView style={{ flex: 1, backgroundColor: C.bg }} contentContainerStyle={{ padding: 16, paddingBottom: 130 }}>
       <View style={{ marginTop: 56, marginBottom: 20 }}>
         <Text style={{ fontSize: 34, fontWeight: "800", letterSpacing: -0.5 }}>Προφίλ</Text>
       </View>
@@ -184,7 +185,7 @@ export default function Profile() {
         <RowSeparator />
         <ListRow icon="star" iconBg="#FFCC00" title="Βαθμολογήστε το app" />
         <RowSeparator />
-        <ListRow icon="information-circle" iconBg={C.sub} title="Σχετικά" subtitle="Έκδοση 0.1.0" />
+        <ListRow icon="information-circle" iconBg={C.sub} title="Σχετικά" subtitle={`Έκδοση ${Constants.expoConfig?.version ?? "0.1.0"}`} />
       </Group>
 
       {user && (
