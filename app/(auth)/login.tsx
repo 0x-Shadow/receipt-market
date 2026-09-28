@@ -28,6 +28,7 @@ export default function Login() {
     setLoading(true);
     try {
       await signIn(email, password);
+      router.replace("/(tabs)");
     } catch (error: any) {
       setError(error.message || "Η σύνδεση απέτυχε");
     } finally {

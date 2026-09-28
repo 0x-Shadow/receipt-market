@@ -35,8 +35,10 @@ export default function Signup() {
           "Έλεγξε το email σου",
           "Στείλαμε σύνδεσμο επιβεβαίωσης στο " + email + ". Επιβεβαίωσε τον λογαριασμό και μετά συνδέσου."
         );
+        router.replace("/login");
         return;
       }
+      router.replace("/onboarding");
     } catch (error: any) {
       setError(error.message || "Η εγγραφή απέτυχε");
     } finally {

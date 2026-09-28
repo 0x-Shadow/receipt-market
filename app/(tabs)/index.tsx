@@ -249,18 +249,20 @@ export default function Home() {
         </View>
       </View>
 
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Σημερινές προσφορές</Text>
-        <Pressable
-          onPress={() => {
-            setCat("Όλα");
-            void Haptics.selectionAsync();
-          }}
-          hitSlop={8}
-        >
-          <Text style={styles.seeAll}>Δες όλα</Text>
-        </Pressable>
-      </View>
+      {!loading && topOffers.length === 0 && items.length === 0 ? null : (
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Σημερινές προσφορές</Text>
+          <Pressable
+            onPress={() => {
+              setCat("Όλα");
+              void Haptics.selectionAsync();
+            }}
+            hitSlop={8}
+          >
+            <Text style={styles.seeAll}>Δες όλα</Text>
+          </Pressable>
+        </View>
+      )}
 
       {loading ? (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.topRow}>
@@ -301,7 +303,7 @@ export default function Home() {
         })}
       </ScrollView>
 
-      <Text style={styles.listTitle}>Όλα τα προϊόντα</Text>
+      {!loading && items.length === 0 ? null : <Text style={styles.listTitle}>Όλα τα προϊόντα</Text>}
 
       {loading ? (
         <View>
@@ -324,8 +326,13 @@ export default function Home() {
       ) : items.length === 0 ? (
         <EmptyState
           icon="cube-outline"
-          title="Δεν βρέθηκαν προϊόντα"
-          subtitle="Ελεγξε τη σύνδεση Supabase και δοκίμασε ξανά."
+          title="Καμία τιμή ακόμη"
+          subtitle="Σκάναρε την πρώτη σου απόδειξη και οι τιμές θα εμφανιστούν εδώ για όλους."
+          actionText="Σκάναρε τώρα"
+          onAction={() => {
+            void Haptics.selectionAsync();
+            router.push("/(tabs)/scan" as never);
+          }}
         />
       ) : filtered.length === 0 ? (
         <EmptyState icon="search-outline" title="Κανένα αποτέλεσμα" subtitle="Δοκίμασε άλλη αναζήτηση ή κατηγορία." />
@@ -380,7 +387,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 16,
-    paddingBottom: 110,
+    paddingBottom: 150,
   },
   header: {
     marginTop: 56,

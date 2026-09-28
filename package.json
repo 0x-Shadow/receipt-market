@@ -15,12 +15,14 @@
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",
+    "@react-native-async-storage/async-storage": "^2.2.0",
     "@react-native-ml-kit/text-recognition": "^1.5.2",
     "@supabase/supabase-js": "^2.45.0",
     "expo": "~57.0.0",
     "expo-blur": "~57.0.3",
     "expo-camera": "~57.0.5",
     "expo-constants": "~57.0.19",
+    "expo-crypto": "~57.0.3",
     "expo-haptics": "~57.0.3",
     "expo-image-picker": "~57.0.20",
     "expo-linking": "~57.0.11",
@@ -44,7 +46,8 @@
     "vitest": "^2.0.0"
   },
   "allowScripts": {
-    "esbuild": true
+    "esbuild": true,
+    "expo-crypto": true
   },
   "overrides": {
     "react": "19.2.3",

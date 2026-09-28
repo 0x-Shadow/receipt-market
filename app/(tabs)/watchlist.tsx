@@ -314,7 +314,7 @@ export default function Watchlist() {
   return (
     <ScrollView
       style={{ flex: 1, backgroundColor: T.bg }}
-      contentContainerStyle={{ padding: 16, paddingBottom: 110 }}
+      contentContainerStyle={{ padding: 16, paddingBottom: 150 }}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={() => load(true)} tintColor={T.sub} />
       }
