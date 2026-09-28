@@ -34,6 +34,23 @@ type WatchItem = {
   history: PricePoint[];
 };
 
+type FilterKey = "all" | "deals" | "watching";
+
+const T = {
+  bg: "#F7F8FA",
+  card: "#FFFFFF",
+  ink: "#1A2233",
+  sub: "#6B7280",
+  faint: "#9CA3AF",
+  accent: "#0A84FF",
+  green: "#1F8A4C",
+  greenBg: "#E8F9EE",
+  red: "#E5484D",
+  redBg: "#FDECEC",
+  border: "#EDF0F4",
+  thumb: "#F5F7FA",
+};
+
 const eur = (n: number) => `${n.toFixed(2)}€`;
 
 async function fetchWatchlist(): Promise<WatchItem[]> {
@@ -97,14 +114,14 @@ function SkeletonGroup() {
   return (
     <View style={{ marginTop: 14, gap: 10 }}>
       {[0, 1, 2].map((i) => (
-        <View key={i} style={{ backgroundColor: C.card, borderRadius: 16, padding: 16 }}>
+        <View key={i} style={styles.skelCard}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-            <Skeleton style={{ width: 44, height: 44, borderRadius: 12 }} />
+            <Skeleton style={{ width: 48, height: 48, borderRadius: 12 }} />
             <View style={{ flex: 1, gap: 8 }}>
-              <Skeleton style={{ height: 14, width: "55%" }} />
-              <Skeleton style={{ height: 11, width: "35%" }} />
+              <Skeleton style={{ height: 14, width: "55%", borderRadius: 6 }} />
+              <Skeleton style={{ height: 11, width: "35%", borderRadius: 6 }} />
             </View>
-            <Skeleton style={{ height: 22, width: 60, borderRadius: 8 }} />
+            <Skeleton style={{ height: 24, width: 64, borderRadius: 8 }} />
           </View>
         </View>
       ))}
@@ -127,6 +144,12 @@ function WatchCard({
     item.currentPrice != null && item.previousPrice != null
       ? item.currentPrice - item.previousPrice
       : null;
+  const isDeal =
+    item.currentPrice != null && item.previousPrice != null && item.currentPrice < item.previousPrice;
+  const pct =
+    isDeal && item.currentPrice != null && item.previousPrice != null && item.previousPrice > 0
+      ? Math.round(((item.previousPrice - item.currentPrice) / item.previousPrice) * 100)
+      : null;
   const hitTarget =
     item.targetPrice != null && item.currentPrice != null && item.currentPrice <= item.targetPrice;
   const added = new Date(item.addedAt).toLocaleDateString("el-GR", {
@@ -134,72 +157,102 @@ function WatchCard({
     month: "short",
     year: "numeric",
   });
+  const subtitle =
+    item.targetPrice != null
+      ? `${item.storeName ?? "—"} · στόχος ${eur(item.targetPrice)}`
+      : `${item.storeName ?? "—"}`;
 
   return (
-    <View style={{ backgroundColor: C.card, borderRadius: 16, padding: 16 }}>
+    <View style={styles.card}>
       <View style={{ flexDirection: "row", alignItems: "center" }}>
         <Pressable
           onPress={onToggleExpand}
-          style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 4 }}
+          style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 2 }}
         >
-          <EmojiTile emoji={item.emoji} size={44} />
-          <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 16, fontWeight: "600", letterSpacing: -0.2 }}>{item.name}</Text>
-            <Text style={{ fontSize: 12.5, color: C.sub, marginTop: 2 }}>
-              {item.storeName ?? "—"}
-              {item.targetPrice != null ? ` · στόχος ${eur(item.targetPrice)}` : ""}
-            </Text>
+          <View style={styles.thumb}>
+            <Text style={{ fontSize: 24 }}>{item.emoji}</Text>
           </View>
-          {item.currentPrice != null ? (
-            <PriceBadge price={item.currentPrice} oldPrice={item.previousPrice ?? undefined} />
-          ) : (
-            <Text style={{ fontSize: 13, color: C.sub, fontWeight: "600" }}>—</Text>
-          )}
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <Text numberOfLines={1} style={styles.name}>
+              {item.name}
+            </Text>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 4 }}>
+              <View style={styles.dot} />
+              <Text numberOfLines={1} style={styles.subLine}>
+                {subtitle}
+              </Text>
+            </View>
+          </View>
+          <View style={{ alignItems: "flex-end", gap: 6 }}>
+            <Text style={styles.price}>
+              {item.currentPrice != null ? eur(item.currentPrice) : "—"}
+            </Text>
+            {pct != null ? (
+              <View style={styles.dealBadge}>
+                <Text style={styles.dealText}>-{pct}%</Text>
+              </View>
+            ) : null}
+          </View>
           <Ionicons
             name="chevron-forward"
-            size={17}
-            color={C.ter}
+            size={16}
+            color={T.faint}
             style={{ transform: [{ rotate: expanded ? "90deg" : "0deg" }] }}
           />
         </Pressable>
         <Pressable onPress={onToggleWatch} hitSlop={12} style={styles.heart}>
-          <Ionicons name="heart" size={20} color={C.red} />
+          <Ionicons name="heart" size={18} color={T.red} />
         </Pressable>
       </View>
 
       {expanded && (
-        <View style={{ marginTop: 14 }}>
-          {item.history.length > 1 ? (
-            <PriceChart data={item.history.map((h) => ({ date: h.date, price: h.price }))} />
-          ) : (
-            <Text style={{ fontSize: 13, color: C.sub }}>
-              Δεν υπάρχουν αρκετές πρόσφατες τιμές για γράφημα.
-            </Text>
-          )}
-          <View style={{ flexDirection: "row", gap: 10, marginTop: 14 }}>
-            <StatCard
-              value={item.currentPrice != null ? eur(item.currentPrice) : "—"}
-              label="Τιμή"
-            />
-            <StatCard
-              value={item.targetPrice != null ? eur(item.targetPrice) : "—"}
-              label="Στόχος"
-            />
-            <StatCard
-              value={change != null ? `${change > 0 ? "+" : "−"}${eur(Math.abs(change))}` : "—"}
-              label="Μεταβολή"
-              accent={change == null ? undefined : change < 0 ? C.green : change > 0 ? C.red : C.text}
-            />
+        <View style={styles.expanded}>
+          <View style={styles.chartBox}>
+            {item.history.length > 1 ? (
+              <PriceChart data={item.history.map((h) => ({ date: h.date, price: h.price }))} />
+            ) : (
+              <Text style={{ fontSize: 13, color: T.sub }}>
+                Δεν υπάρχουν αρκετές πρόσφατες τιμές για γράφημα.
+              </Text>
+            )}
+          </View>
+          <View style={{ flexDirection: "row", gap: 10, marginTop: 10 }}>
+            <View style={styles.stat}>
+              <Text style={styles.statValue}>
+                {item.currentPrice != null ? eur(item.currentPrice) : "—"}
+              </Text>
+              <Text style={styles.statLabel}>Τιμή</Text>
+            </View>
+            <View style={styles.stat}>
+              <Text style={styles.statValue}>
+                {item.targetPrice != null ? eur(item.targetPrice) : "—"}
+              </Text>
+              <Text style={styles.statLabel}>Στόχος</Text>
+            </View>
+            <View style={styles.stat}>
+              <Text
+                style={[
+                  styles.statValue,
+                  {
+                    color:
+                      change == null ? T.ink : change < 0 ? T.green : change > 0 ? T.red : T.ink,
+                  },
+                ]}
+              >
+                {change != null ? `${change > 0 ? "+" : "−"}${eur(Math.abs(change))}` : "—"}
+              </Text>
+              <Text style={styles.statLabel}>Μεταβολή</Text>
+            </View>
           </View>
           {hitTarget && (
             <View style={styles.hit}>
-              <Ionicons name="checkmark-circle" size={16} color={C.green} />
-              <Text style={{ fontSize: 13, color: C.green, fontWeight: "600", flex: 1 }}>
+              <Ionicons name="checkmark-circle" size={16} color={T.green} />
+              <Text style={{ fontSize: 13, color: T.green, fontWeight: "700", flex: 1 }}>
                 Η τιμή έφτασε τον στόχο σου!
               </Text>
             </View>
           )}
-          <Text style={{ marginTop: 12, fontSize: 12, color: C.sub }}>
+          <Text style={{ marginTop: 12, fontSize: 12, color: T.faint }}>
             Προστέθηκε στις {added}
             {item.category ? ` · ${item.category}` : ""}
           </Text>
@@ -215,6 +268,7 @@ export default function Watchlist() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [filter, setFilter] = useState<FilterKey>("all");
 
   const load = useCallback(async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true);
@@ -239,21 +293,68 @@ export default function Watchlist() {
     if (error) load();
   }
 
+  const filtered =
+    filter === "deals"
+      ? items.filter(
+          (i) => i.currentPrice != null && i.previousPrice != null && i.currentPrice < i.previousPrice
+        )
+      : items;
+
+  const chips: { key: FilterKey; label: string }[] = [
+    { key: "all", label: "Όλα" },
+    { key: "deals", label: "Προσφορές" },
+    { key: "watching", label: "Παρακολούθηση" },
+  ];
+
+  void C;
+  void EmojiTile;
+  void PriceBadge;
+  void StatCard;
+
   return (
     <ScrollView
-      style={{ flex: 1, backgroundColor: C.bg }}
-      contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
+      style={{ flex: 1, backgroundColor: T.bg }}
+      contentContainerStyle={{ padding: 16, paddingBottom: 110 }}
       refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={() => load(true)} tintColor={C.sub} />
+        <RefreshControl refreshing={refreshing} onRefresh={() => load(true)} tintColor={T.sub} />
       }
     >
-      <View style={{ marginTop: 56, marginBottom: 6 }}>
-        <Text style={{ fontSize: 34, fontWeight: "800", letterSpacing: -0.5 }}>Λίστα</Text>
-        <Text style={{ fontSize: 15, color: C.sub, marginTop: 4 }}>
-          {items.length === 0
-            ? "Δεν παρακολουθείς κάτι ακόμα"
-            : `${items.length} ${items.length === 1 ? "προϊόν" : "προϊόντα"} · θα ειδοποιηθείς όταν πέσει η τιμή`}
-        </Text>
+      <View style={styles.header}>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.title}>Η λίστα μου</Text>
+          <Text style={styles.headerSub}>
+            {items.length === 0
+              ? "Δεν παρακολουθείς κάτι ακόμα"
+              : `${items.length} προϊόντα · ειδοποιήσου όταν πέσει η τιμή`}
+          </Text>
+        </View>
+        <Pressable
+          onPress={() => Haptics.selectionAsync()}
+          hitSlop={8}
+          style={styles.iconBtn}
+        >
+          <Ionicons name="notifications-outline" size={20} color={T.ink} />
+        </Pressable>
+      </View>
+
+      <View style={styles.chips}>
+        {chips.map((c) => {
+          const active = filter === c.key;
+          return (
+            <Pressable
+              key={c.key}
+              onPress={() => {
+                Haptics.selectionAsync();
+                setFilter(c.key);
+              }}
+              style={[styles.chip, active ? styles.chipActive : styles.chipIdle]}
+            >
+              <Text style={[styles.chipText, active ? styles.chipTextActive : styles.chipTextIdle]}>
+                {c.label}
+              </Text>
+            </Pressable>
+          );
+        })}
       </View>
 
       {loading ? (
@@ -266,9 +367,18 @@ export default function Watchlist() {
           actionText="Ψάξε προϊόντα"
           onAction={() => router.push("/")}
         />
+      ) : filtered.length === 0 ? (
+        <View style={styles.card}>
+          <Text style={{ fontSize: 15, fontWeight: "700", color: T.ink }}>
+            Δεν υπάρχουν προσφορές αυτή τη στιγμή
+          </Text>
+          <Text style={{ fontSize: 13, color: T.sub, marginTop: 4 }}>
+            Θα ειδοποιηθείς μόλις πέσει κάποια τιμή.
+          </Text>
+        </View>
       ) : (
         <View style={{ marginTop: 14, gap: 10 }}>
-          {items.map((item) => (
+          {filtered.map((item) => (
             <WatchCard
               key={item.watchId}
               item={item}
@@ -287,21 +397,173 @@ export default function Watchlist() {
 }
 
 const styles = StyleSheet.create({
+  header: {
+    marginTop: 56,
+    marginBottom: 6,
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 12,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: "800",
+    letterSpacing: -0.5,
+    color: T.ink,
+  },
+  headerSub: {
+    fontSize: 13,
+    color: T.sub,
+    marginTop: 4,
+    lineHeight: 18,
+  },
+  iconBtn: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: T.card,
+    borderWidth: 1,
+    borderColor: T.border,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 2,
+  },
+  chips: {
+    flexDirection: "row",
+    gap: 8,
+    marginTop: 14,
+  },
+  chip: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 999,
+    borderWidth: 1,
+  },
+  chipActive: {
+    backgroundColor: T.ink,
+    borderColor: T.ink,
+  },
+  chipIdle: {
+    backgroundColor: T.card,
+    borderColor: T.border,
+  },
+  chipText: {
+    fontSize: 13,
+    fontWeight: "700",
+  },
+  chipTextActive: {
+    color: "#FFFFFF",
+  },
+  chipTextIdle: {
+    color: T.ink,
+  },
+  card: {
+    backgroundColor: T.card,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: T.border,
+    padding: 14,
+  },
+  thumb: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    backgroundColor: T.thumb,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  name: {
+    fontSize: 15,
+    fontWeight: "600",
+    letterSpacing: -0.2,
+    color: T.ink,
+  },
+  subLine: {
+    fontSize: 12,
+    color: T.faint,
+    fontWeight: "500",
+    flex: 1,
+  },
+  dot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: T.accent,
+  },
+  price: {
+    fontSize: 15,
+    fontWeight: "800",
+    color: T.ink,
+    letterSpacing: -0.2,
+  },
+  dealBadge: {
+    backgroundColor: T.greenBg,
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  dealText: {
+    fontSize: 12,
+    fontWeight: "800",
+    color: T.green,
+  },
   heart: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "rgba(255,59,48,0.10)",
+    backgroundColor: T.redBg,
     alignItems: "center",
     justifyContent: "center",
+    marginLeft: 8,
+  },
+  expanded: {
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: T.border,
+  },
+  chartBox: {
+    backgroundColor: T.bg,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: T.border,
+    padding: 12,
+  },
+  stat: {
+    flex: 1,
+    backgroundColor: T.bg,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: T.border,
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    alignItems: "center",
+  },
+  statValue: {
+    fontSize: 15,
+    fontWeight: "800",
+    color: T.ink,
+    letterSpacing: -0.2,
+  },
+  statLabel: {
+    fontSize: 12,
+    color: T.sub,
+    marginTop: 3,
+    fontWeight: "500",
   },
   hit: {
-    marginTop: 12,
+    marginTop: 10,
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    backgroundColor: "rgba(52,199,89,0.10)",
-    borderRadius: 10,
+    backgroundColor: T.greenBg,
+    borderRadius: 12,
     padding: 10,
+  },
+  skelCard: {
+    backgroundColor: T.card,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: T.border,
+    padding: 14,
   },
 });

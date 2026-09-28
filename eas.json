@@ -1,0 +1,38 @@
+{
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "ios": {
+        "simulator": true
+      }
+    },
+    "preview": {
+      "android": {
+        "buildType": "apk"
+      },
+      "distribution": "internal"
+    },
+    "production": {
+      "android": {
+        "buildType": "app-bundle"
+      },
+      "ios": {
+        "simulator": false
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "android": {
+        "package": "com.receiptmarket.app"
+      },
+      "ios": {
+        "bundleId": "com.receiptmarket.app"
+      }
+    }
+  },
+  "update": {
+    "channel": "auto"
+  }
+}

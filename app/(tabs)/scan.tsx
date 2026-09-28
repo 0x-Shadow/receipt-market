@@ -7,6 +7,8 @@ import { useRouter } from "expo-router";
 import TextRecognition from "@react-native-ml-kit/text-recognition";
 import { parseGreekReceipt } from "../../src/parser/greekReceiptParser";
 import { supabase } from "../../src/lib/supabase";
+import { checkRateLimit } from "../../src/lib/rateLimiter";
+import { logError, logInfo } from "../../src/lib/crashReporter";
 import { C, AppleCard, EmojiTile } from "../../src/components/Apple";
 
 const SAMPLE = "ΣΚΛΑΒΕΝΙΤΗΣ\nΦΕΤΑ ΠΟΠ 400G 4,89\nΓΑΛΑ 1L 1,89\nΣΥΝΟΛΟ 6,78";
@@ -343,20 +345,50 @@ export default function Scan() {
       return;
     }
     try {
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData?.user?.id ?? "anonymous";
+      if (!checkRateLimit(`scan:${userId}`, 5, 60_000)) {
+        Alert.alert("Πολλές αιτήσεις", "Περίμενε λίγο πριν ξαναπροσπαθήσεις.");
+        return;
+      }
       const { data: store } = await supabase.from("stores").select("id").eq("chain", parsed.storeChain).limit(1).single();
+      const { data: receipt, error: receiptError } = await supabase
+        .from("receipts")
+        .insert({
+          user_id: userId,
+          store_id: (store as any).id,
+          total: parsed.total,
+          item_count: parsed.items.length,
+          parsed_confidence: parsed.confidence,
+        })
+        .select("id")
+        .single();
+      if (receiptError || !receipt) throw receiptError;
+      let priceErrors = 0;
       for (const it of parsed.items) {
         const { data: prod } = await supabase
           .from("products")
           .upsert({ name_el: it.name, category: "Άλλα" }, { onConflict: "name_el" })
           .select("id")
           .single();
-        if (prod && store) await supabase.from("prices").insert({ product_id: prod.id, store_id: (store as any).id, price: it.price });
+        if (prod && store) {
+          const { error: priceError } = await supabase
+            .from("prices")
+            .insert({ product_id: prod.id, store_id: (store as any).id, receipt_id: (receipt as any).id, price: it.price });
+          if (priceError) priceErrors++;
+        }
       }
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      Alert.alert("Αποθηκεύτηκε", `${parsed.items.length} προϊόντα από ${parsed.storeChain}`);
+      logInfo("scan_save_success", { itemCount: parsed.items.length, store: parsed.storeChain });
+      if (priceErrors > 0) {
+        Alert.alert("Αποθηκεύτηκε με προβλήματα", `Η απόδειξη αποθηκεύτηκε αλλά ${priceErrors} τιμές απέτυχαν.`);
+      } else {
+        Alert.alert("Αποθηκεύτηκε", `${parsed.items.length} προϊόντα από ${parsed.storeChain}`);
+      }
       setRaw("");
-    } catch {
+    } catch (e) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      logError(e as Error, { context: "scan_save" });
       Alert.alert("Κάτι πήγε στραβά", "Έλεγξε το internet και ξαναπροσπάθησε.");
     }
   }

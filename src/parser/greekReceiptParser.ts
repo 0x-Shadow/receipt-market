@@ -1,3 +1,5 @@
+import { logParserEvent } from "../lib/parserLogger";
+
 export type ParsedItem = {
   name: string;
   price: number;
@@ -205,83 +207,91 @@ function extractVATFromLine(upper: string): number | null {
 }
 
 export function parseGreekReceipt(text: string): ParsedReceipt {
-  const { chain, confidence: storeConfidence } = detectStore(text);
-  const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
-  const items: ParsedItem[] = [];
-  let total: number | null = null;
-  let subtotal: number | null = null;
-  let vatAmount: number | null = null;
+  logParserEvent("parse_start", "unknown", 0, 0);
+  try {
+    const { chain, confidence: storeConfidence } = detectStore(text);
+    const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
+    const items: ParsedItem[] = [];
+    let total: number | null = null;
+    let subtotal: number | null = null;
+    let vatAmount: number | null = null;
 
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    const upper = line.toUpperCase();
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      const upper = line.toUpperCase();
 
-    if (isMetaLine(upper)) {
-      const t = extractTotalFromLine(upper);
-      if (t !== null) total = t;
-      const st = extractSubtotalFromLine(upper);
-      if (st !== null) subtotal = st;
-      const vat = extractVATFromLine(upper);
-      if (vat !== null) vatAmount = vat;
-      continue;
-    }
+      if (isMetaLine(upper)) {
+        const t = extractTotalFromLine(upper);
+        if (t !== null) total = t;
+        const st = extractSubtotalFromLine(upper);
+        if (st !== null) subtotal = st;
+        const vat = extractVATFromLine(upper);
+        if (vat !== null) vatAmount = vat;
+        continue;
+      }
 
-    let workingLine = line;
-    const ocrCorrectedLine = correctOCRErrors(workingLine);
-    const wasCorrected = ocrCorrectedLine !== workingLine;
-    workingLine = ocrCorrectedLine;
+      let workingLine = line;
+      const ocrCorrectedLine = correctOCRErrors(workingLine);
+      const wasCorrected = ocrCorrectedLine !== workingLine;
+      workingLine = ocrCorrectedLine;
 
-    const { quantity, unit, cleaned: afterQty } = extractQuantity(workingLine);
-    workingLine = afterQty;
+      const { quantity, unit, cleaned: afterQty } = extractQuantity(workingLine);
+      workingLine = afterQty;
 
-    const { discount, cleaned: afterDiscount } = extractDiscount(workingLine);
-    workingLine = afterDiscount;
+      const { discount, cleaned: afterDiscount } = extractDiscount(workingLine);
+      workingLine = afterDiscount;
 
-    const { unitPrice, cleaned: afterUnitPrice } = extractUnitPrice(workingLine);
-    workingLine = afterUnitPrice;
+      const { unitPrice, cleaned: afterUnitPrice } = extractUnitPrice(workingLine);
+      workingLine = afterUnitPrice;
 
-    const priceMatch = workingLine.match(/(\d+[.,]\d{2})\s*€?\s*$/);
-    if (!priceMatch && i + 1 < lines.length) {
-      const nextLine = lines[i + 1];
-      const nextPriceMatch = nextLine.match(/^(\d+[.,]\d{2})\s*€?\s*$/);
-      if (nextPriceMatch) {
-        const name = workingLine.replace(/\s{2,}/g, " ").trim();
-        const price = parseDecimal(nextPriceMatch[1]);
-        if (name.length >= 2 && !isNaN(price) && price > 0 && price <= 500) {
-          const confidence = calculateConfidence(name, price, workingLine + " " + nextLine, wasCorrected);
-          items.push({ name, price, raw: line + " | " + nextLine, confidence, quantity, unit });
-          i++;
-          continue;
+      const priceMatch = workingLine.match(/(\d+[.,]\d{2})\s*€?\s*$/);
+      if (!priceMatch && i + 1 < lines.length) {
+        const nextLine = lines[i + 1];
+        const nextPriceMatch = nextLine.match(/^(\d+[.,]\d{2})\s*€?\s*$/);
+        if (nextPriceMatch) {
+          const name = workingLine.replace(/\s{2,}/g, " ").trim();
+          const price = parseDecimal(nextPriceMatch[1]);
+          if (name.length >= 2 && !isNaN(price) && price > 0 && price <= 500) {
+            const confidence = calculateConfidence(name, price, workingLine + " " + nextLine, wasCorrected);
+            items.push({ name, price, raw: line + " | " + nextLine, confidence, quantity, unit });
+            i++;
+            continue;
+          }
         }
       }
+
+      if (!priceMatch) continue;
+
+      const price = parseDecimal(priceMatch[1]);
+      const name = workingLine.replace(/\d+[.,]\d{2}\s*€?\s*$/, "").replace(/\s{2,}/g, " ").trim();
+
+      if (!name || isNaN(price) || price <= 0 || price > 500) continue;
+      if (name.length < 2) continue;
+
+      const finalPrice = discount !== null && discount <= 1
+        ? Math.round((price - price * discount) * 100) / 100
+        : (discount !== null && discount > 1
+            ? Math.round((price - discount) * 100) / 100
+            : price);
+
+      const confidence = calculateConfidence(name, finalPrice, workingLine, wasCorrected);
+      items.push({ name, price: finalPrice, raw: line, confidence, quantity, unit });
     }
 
-    if (!priceMatch) continue;
+    if (total === null && items.length > 0) {
+      total = Math.round(items.reduce((s, item) => s + item.price, 0) * 100) / 100;
+    }
 
-    const price = parseDecimal(priceMatch[1]);
-    const name = workingLine.replace(/\d+[.,]\d{2}\s*€?\s*$/, "").replace(/\s{2,}/g, " ").trim();
+    const parseRatio = Math.min(1, items.length / Math.max(1, lines.length * 0.4));
+    const confidence = Math.round(((parseRatio * 0.7 + storeConfidence * 0.3)) * 100) / 100;
 
-    if (!name || isNaN(price) || price <= 0 || price > 500) continue;
-    if (name.length < 2) continue;
-
-    const finalPrice = discount !== null && discount <= 1
-      ? Math.round((price - price * discount) * 100) / 100
-      : (discount !== null && discount > 1
-          ? Math.round((price - discount) * 100) / 100
-          : price);
-
-    const confidence = calculateConfidence(name, finalPrice, workingLine, wasCorrected);
-    items.push({ name, price: finalPrice, raw: line, confidence, quantity, unit });
+    const result = { storeChain: chain, storeConfidence, items, total, subtotal, vatAmount, confidence };
+    logParserEvent("parse_success", chain, items.length, confidence);
+    return result;
+  } catch (e) {
+    logParserEvent("parse_failure", "unknown", 0, 0, (e as Error).message);
+    throw e;
   }
-
-  if (total === null && items.length > 0) {
-    total = Math.round(items.reduce((s, item) => s + item.price, 0) * 100) / 100;
-  }
-
-  const parseRatio = Math.min(1, items.length / Math.max(1, lines.length * 0.4));
-  const confidence = Math.round(((parseRatio * 0.7 + storeConfidence * 0.3)) * 100) / 100;
-
-  return { storeChain: chain, storeConfidence, items, total, subtotal, vatAmount, confidence };
 }
 
 export function cleanProductName(raw: string): string {

@@ -14,7 +14,6 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { signIn, signInWithGoogle } from "../../src/lib/supabase";
-import { C } from "../../src/components/Apple";
 
 export default function Login() {
   const router = useRouter();
@@ -22,24 +21,27 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleLogin = async () => {
+    setError(null);
     setLoading(true);
     try {
       await signIn(email, password);
     } catch (error: any) {
-      Alert.alert("Σφάλμα", error.message || "Η σύνδεση απέτυχε");
+      setError(error.message || "Η σύνδεση απέτυχε");
     } finally {
       setLoading(false);
     }
   };
 
   const handleGoogleLogin = async () => {
+    setError(null);
     setLoading(true);
     try {
       await signInWithGoogle();
     } catch (error: any) {
-      Alert.alert("Σφάλμα", error.message || "Η σύνδεση με Google απέτυχε");
+      setError(error.message || "Η σύνδεση με Google απέτυχε");
     } finally {
       setLoading(false);
     }
@@ -56,7 +58,7 @@ export default function Login() {
       >
         <View style={styles.header}>
           <View style={styles.logoContainer}>
-            <Text style={styles.logoEmoji}>🧾</Text>
+            <Ionicons name="receipt-outline" size={32} color="#FFFFFF" />
           </View>
           <Text style={styles.title}>Καλωσήρθες ξανά!</Text>
           <Text style={styles.subtitle}>Συνδέσου στον λογαριασμό σου</Text>
@@ -108,13 +110,20 @@ export default function Login() {
             </Pressable>
           </View>
 
+          {error && (
+            <View style={styles.errorContainer}>
+              <Ionicons name="alert-circle-outline" size={16} color="#FF3B30" />
+              <Text style={styles.errorText}>{error}</Text>
+            </View>
+          )}
+
           <Pressable
-            style={styles.button}
+            style={[styles.button, loading && styles.buttonDisabled]}
             onPress={handleLogin}
             disabled={loading}
           >
             {loading ? (
-              <ActivityIndicator color="#fff" />
+              <ActivityIndicator color="#FFFFFF" />
             ) : (
               <Text style={styles.buttonText}>Σύνδεση</Text>
             )}
@@ -165,31 +174,33 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: "center",
-    marginBottom: 32,
+    marginBottom: 40,
   },
   logoContainer: {
-    width: 72,
-    height: 72,
-    borderRadius: 20,
+    width: 80,
+    height: 80,
+    borderRadius: 22,
     backgroundColor: "#1A2233",
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 20,
-  },
-  logoEmoji: {
-    fontSize: 34,
+    marginBottom: 24,
+    shadowColor: "#1A2233",
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 8,
   },
   title: {
-    fontSize: 28,
+    fontSize: 30,
     fontWeight: "700",
     color: "#1A2233",
     textAlign: "center",
     marginBottom: 8,
-    letterSpacing: -0.4,
+    letterSpacing: -0.5,
   },
   subtitle: {
     fontSize: 15,
-    color: "#6B7280",
+    color: "#8E8E93",
     textAlign: "center",
   },
   form: {
@@ -198,58 +209,83 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
+    backgroundColor: "#F7F8FA",
+    borderRadius: 14,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
-    marginBottom: 12,
-    paddingHorizontal: 14,
+    borderColor: "#E8EAED",
+    marginBottom: 14,
+    paddingHorizontal: 16,
   },
   inputIcon: {
-    marginRight: 10,
+    marginRight: 12,
   },
   input: {
     flex: 1,
-    paddingVertical: 14,
+    paddingVertical: 16,
     fontSize: 16,
     color: "#1A2233",
   },
   eyeIcon: {
     padding: 4,
   },
+  errorContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFF5F5",
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 16,
+    gap: 8,
+  },
+  errorText: {
+    flex: 1,
+    color: "#FF3B30",
+    fontSize: 14,
+  },
   button: {
     backgroundColor: "#1A2233",
-    borderRadius: 12,
-    padding: 14,
+    borderRadius: 14,
+    padding: 16,
     alignItems: "center",
     marginTop: 8,
+    shadowColor: "#1A2233",
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 5 },
+    elevation: 5,
+  },
+  buttonDisabled: {
+    opacity: 0.6,
+    shadowOpacity: 0,
+    elevation: 0,
   },
   buttonText: {
     color: "#FFFFFF",
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: "600",
   },
   forgotPassword: {
     alignItems: "center",
-    marginTop: 16,
+    marginTop: 20,
   },
   forgotPasswordText: {
-    color: "#1A2233",
-    fontSize: 14,
+    color: "#0A84FF",
+    fontSize: 15,
+    fontWeight: "500",
   },
   dividerContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginVertical: 24,
+    marginVertical: 28,
   },
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: "#E5E7EB",
+    backgroundColor: "#E8EAED",
   },
   dividerText: {
-    marginHorizontal: 12,
-    color: "#9CA3AF",
+    marginHorizontal: 14,
+    color: "#8E8E93",
     fontSize: 14,
   },
   googleButton: {
@@ -257,20 +293,20 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#FFFFFF",
-    borderRadius: 12,
+    borderRadius: 14,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
-    padding: 14,
-    gap: 10,
+    borderColor: "#E8EAED",
+    padding: 16,
+    gap: 12,
   },
   googleIconContainer: {
-    width: 20,
-    height: 20,
+    width: 22,
+    height: 22,
     alignItems: "center",
     justifyContent: "center",
   },
   googleG: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: "700",
     color: "#4285F4",
   },
@@ -282,15 +318,15 @@ const styles = StyleSheet.create({
   footer: {
     flexDirection: "row",
     justifyContent: "center",
-    marginTop: 24,
+    marginTop: 32,
   },
   footerText: {
-    color: "#6B7280",
-    fontSize: 14,
+    color: "#8E8E93",
+    fontSize: 15,
   },
   footerLink: {
-    color: "#1A2233",
-    fontSize: 14,
+    color: "#0A84FF",
+    fontSize: 15,
     fontWeight: "600",
   },
 });

@@ -1,11 +1,9 @@
-import { View, Text, Pressable, Animated, StyleSheet, Dimensions, ImageBackground, ScrollView } from "react-native";
+import { View, Text, Pressable, Animated, StyleSheet, Dimensions, ScrollView } from "react-native";
 import { useRef, useState } from "react";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
 const { width } = Dimensions.get("window");
-
-const HERO_IMAGE = "https://images.unsplash.com/photo-1542838132-92c53300491e?w=1200&q=80";
 
 export default function Onboarding() {
   const router = useRouter();
@@ -14,10 +12,11 @@ export default function Onboarding() {
 
   const goToPage = (next: number) => {
     setPage(next);
-    Animated.timing(slideAnim, {
+    Animated.spring(slideAnim, {
       toValue: -next * width,
-      duration: 320,
       useNativeDriver: true,
+      tension: 60,
+      friction: 12,
     }).start();
   };
 
@@ -37,22 +36,19 @@ export default function Onboarding() {
           </Text>
 
           <View style={styles.heroCard}>
-            <ImageBackground source={{ uri: HERO_IMAGE }} style={styles.heroImage} imageStyle={styles.heroImageRadius} resizeMode="cover">
-              <View style={styles.heroOverlay} />
-              <View style={styles.heroContent}>
-                <View style={styles.heroLogo}>
-                  <Text style={styles.heroLogoEmoji}>🧾</Text>
-                </View>
-                <Text style={styles.heroTitle}>receipt-market</Text>
-                <Text style={styles.heroTagline}>Σκάνε. Οχτώ. Εξοικονόμησε.</Text>
+            <View style={styles.heroGradient}>
+              <View style={styles.heroLogo}>
+                <Ionicons name="receipt-outline" size={28} color="#FFFFFF" />
               </View>
-            </ImageBackground>
+              <Text style={styles.heroTitle}>receipt-market</Text>
+              <Text style={styles.heroTagline}>Σκάνε. Μοιράσου. Εξοικονόμησε.</Text>
+            </View>
           </View>
 
           <View style={styles.stepsCard}>
             <View style={styles.stepRow}>
               <View style={styles.stepIcon}>
-                <Ionicons name="camera-outline" size={19} color="#1A2233" />
+                <Ionicons name="camera-outline" size={20} color="#0A84FF" />
               </View>
               <View style={styles.stepTextWrap}>
                 <Text style={styles.stepTitle}>Σκάνε την απόδειξη</Text>
@@ -62,7 +58,7 @@ export default function Onboarding() {
             <View style={styles.stepDivider} />
             <View style={styles.stepRow}>
               <View style={styles.stepIcon}>
-                <Ionicons name="notifications-outline" size={19} color="#1A2233" />
+                <Ionicons name="notifications-outline" size={20} color="#0A84FF" />
               </View>
               <View style={styles.stepTextWrap}>
                 <Text style={styles.stepTitle}>Μάθε πότε πέφτει τιμή</Text>
@@ -72,7 +68,7 @@ export default function Onboarding() {
             <View style={styles.stepDivider} />
             <View style={styles.stepRow}>
               <View style={styles.stepIcon}>
-                <Ionicons name="heart-outline" size={19} color="#1A2233" />
+                <Ionicons name="heart-outline" size={20} color="#0A84FF" />
               </View>
               <View style={styles.stepTextWrap}>
                 <Text style={styles.stepTitle}>Πρόσθεσε στη λίστα σου</Text>
@@ -92,7 +88,7 @@ export default function Onboarding() {
             <View style={styles.wishlistHeader}>
               <Text style={styles.wishlistHeaderTitle}>Η λίστα μου</Text>
               <View style={styles.bellWrap}>
-                <Ionicons name="notifications-outline" size={15} color="#6B7280" />
+                <Ionicons name="notifications-outline" size={15} color="#8E8E93" />
               </View>
             </View>
 
@@ -211,7 +207,13 @@ export default function Onboarding() {
       <View style={styles.bottomContainer}>
         <View style={styles.dotsContainer}>
           {[0, 1, 2].map((index) => (
-            <View key={index} style={[styles.dot, page === index ? styles.dotActive : styles.dotInactive]} />
+            <View
+              key={index}
+              style={[
+                styles.dot,
+                page === index ? styles.dotActive : styles.dotInactive,
+              ]}
+            />
           ))}
         </View>
 
@@ -221,8 +223,11 @@ export default function Onboarding() {
             <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
           </Pressable>
         ) : (
-          <Pressable style={styles.arrowButton} onPress={() => goToPage(page + 1)}>
-            <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
+          <Pressable
+            style={styles.arrowButton}
+            onPress={() => goToPage(page + 1)}
+          >
+            <Ionicons name="arrow-forward" size={22} color="#FFFFFF" />
           </Pressable>
         )}
       </View>
@@ -237,14 +242,14 @@ const styles = StyleSheet.create({
   },
   skipButton: {
     position: "absolute",
-    top: 58,
+    top: 60,
     right: 20,
     zIndex: 10,
     padding: 6,
   },
   skipText: {
     fontSize: 15,
-    color: "#6B7280",
+    color: "#8E8E93",
     fontWeight: "500",
   },
   pagesContainer: {
@@ -258,90 +263,78 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
   },
   heading: {
-    fontSize: 30,
+    fontSize: 32,
     fontWeight: "700",
     color: "#1A2233",
     letterSpacing: -0.6,
-    lineHeight: 36,
-    marginBottom: 12,
+    lineHeight: 38,
+    marginBottom: 14,
   },
   subtitle: {
     fontSize: 15,
-    color: "#6B7280",
-    lineHeight: 22,
-    marginBottom: 26,
+    color: "#8E8E93",
+    lineHeight: 23,
+    marginBottom: 32,
   },
   heroCard: {
-    borderRadius: 24,
+    borderRadius: 20,
     overflow: "hidden",
-    marginBottom: 18,
-    shadowColor: "#0B1220",
-    shadowOpacity: 0.14,
+    marginBottom: 20,
+    shadowColor: "#1A2233",
+    shadowOpacity: 0.18,
     shadowRadius: 20,
     shadowOffset: { width: 0, height: 10 },
-    elevation: 6,
+    elevation: 8,
   },
-  heroImage: {
-    height: 210,
-    width: "100%",
+  heroGradient: {
+    backgroundColor: "#1A2233",
+    padding: 24,
+    height: 180,
     justifyContent: "space-between",
   },
-  heroImageRadius: {
-    borderRadius: 24,
-  },
-  heroOverlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "rgba(10,18,32,0.34)",
-  },
-  heroContent: {
-    padding: 20,
-  },
   heroLogo: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: "rgba(255,255,255,0.22)",
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    backgroundColor: "rgba(255,255,255,0.15)",
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 10,
-  },
-  heroLogoEmoji: {
-    fontSize: 20,
   },
   heroTitle: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: "800",
     color: "#FFFFFF",
     letterSpacing: -0.5,
   },
   heroTagline: {
     fontSize: 14,
-    color: "rgba(255,255,255,0.88)",
+    color: "rgba(255,255,255,0.8)",
     marginTop: 2,
   },
   stepsCard: {
     backgroundColor: "#FFFFFF",
-    borderRadius: 20,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: "#EDF0F4",
-    paddingHorizontal: 16,
-    paddingVertical: 4,
+    borderColor: "#E8EAED",
+    paddingHorizontal: 18,
+    paddingVertical: 6,
+    shadowColor: "#0B1220",
+    shadowOpacity: 0.04,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2,
   },
   stepRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 13,
-    paddingVertical: 14,
+    gap: 14,
+    paddingVertical: 16,
   },
   stepIcon: {
-    width: 38,
-    height: 38,
+    width: 40,
+    height: 40,
     borderRadius: 12,
-    backgroundColor: "#F1F4F8",
+    backgroundColor: "rgba(10,132,255,0.1)",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -354,66 +347,66 @@ const styles = StyleSheet.create({
     color: "#1A2233",
   },
   stepDesc: {
-    fontSize: 12.5,
-    color: "#8A93A2",
+    fontSize: 13,
+    color: "#8E8E93",
     marginTop: 2,
-    lineHeight: 17,
+    lineHeight: 18,
   },
   stepDivider: {
     height: 1,
     backgroundColor: "#F1F4F8",
-    marginLeft: 51,
+    marginLeft: 54,
   },
   wishlistCard: {
     backgroundColor: "#FFFFFF",
-    borderRadius: 22,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: "#EDF0F4",
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 4,
+    borderColor: "#E8EAED",
+    paddingHorizontal: 18,
+    paddingTop: 18,
+    paddingBottom: 6,
     shadowColor: "#0B1220",
-    shadowOpacity: 0.07,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.06,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 5 },
     elevation: 3,
   },
   wishlistHeader: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 6,
+    marginBottom: 8,
   },
   wishlistHeaderTitle: {
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: "700",
     color: "#1A2233",
     letterSpacing: -0.2,
   },
   bellWrap: {
-    width: 28,
-    height: 28,
-    borderRadius: 8,
-    backgroundColor: "#F1F4F8",
+    width: 30,
+    height: 30,
+    borderRadius: 10,
+    backgroundColor: "#F7F8FA",
     alignItems: "center",
     justifyContent: "center",
   },
   wlItem: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
-    paddingVertical: 12,
+    gap: 14,
+    paddingVertical: 13,
   },
   wlThumb: {
-    width: 46,
-    height: 46,
-    borderRadius: 12,
-    backgroundColor: "#F5F7FA",
+    width: 48,
+    height: 48,
+    borderRadius: 13,
+    backgroundColor: "#F7F8FA",
     alignItems: "center",
     justifyContent: "center",
   },
   wlThumbEmoji: {
-    fontSize: 22,
+    fontSize: 24,
   },
   wlInfo: {
     flex: 1,
@@ -426,7 +419,7 @@ const styles = StyleSheet.create({
   wlMeta: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 5,
+    gap: 6,
     marginTop: 3,
   },
   wlDot: {
@@ -437,45 +430,45 @@ const styles = StyleSheet.create({
   },
   wlMetaText: {
     fontSize: 12,
-    color: "#8A93A2",
+    color: "#8E8E93",
   },
   dropBadge: {
-    backgroundColor: "#E8F9EE",
-    borderRadius: 8,
-    paddingHorizontal: 9,
-    paddingVertical: 4,
+    backgroundColor: "rgba(52,199,89,0.12)",
+    borderRadius: 9,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
   },
   dropText: {
-    fontSize: 12.5,
+    fontSize: 13,
     fontWeight: "700",
     color: "#1F8A4C",
   },
   wlDivider: {
     height: 1,
     backgroundColor: "#F1F4F8",
-    marginLeft: 58,
+    marginLeft: 62,
   },
   notifPreview: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
+    gap: 14,
     backgroundColor: "#FFFFFF",
-    borderRadius: 18,
+    borderRadius: 14,
     borderWidth: 1,
-    borderColor: "#EDF0F4",
-    padding: 14,
-    marginTop: 14,
+    borderColor: "#E8EAED",
+    padding: 16,
+    marginTop: 16,
     shadowColor: "#0B1220",
-    shadowOpacity: 0.07,
-    shadowRadius: 14,
-    shadowOffset: { width: 0, height: 5 },
-    elevation: 3,
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2,
   },
   notifIcon: {
-    width: 30,
-    height: 30,
-    borderRadius: 10,
-    backgroundColor: "#1F8A4C",
+    width: 32,
+    height: 32,
+    borderRadius: 11,
+    backgroundColor: "#34C759",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -489,37 +482,37 @@ const styles = StyleSheet.create({
   },
   notifBody: {
     fontSize: 12,
-    color: "#8A93A2",
+    color: "#8E8E93",
     marginTop: 2,
   },
   communityCard: {
     backgroundColor: "#FFFFFF",
-    borderRadius: 22,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: "#EDF0F4",
-    padding: 16,
+    borderColor: "#E8EAED",
+    padding: 18,
     shadowColor: "#0B1220",
-    shadowOpacity: 0.07,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.06,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 5 },
     elevation: 3,
   },
   post: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 11,
-    marginBottom: 8,
+    gap: 12,
+    marginBottom: 10,
   },
   avatarWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     backgroundColor: "#F3ECDD",
     alignItems: "center",
     justifyContent: "center",
   },
   avatarEmoji: {
-    fontSize: 16,
+    fontSize: 17,
   },
   postInfo: {
     flex: 1,
@@ -530,100 +523,110 @@ const styles = StyleSheet.create({
     color: "#1A2233",
   },
   postTime: {
-    fontSize: 11.5,
-    color: "#A0A8B5",
+    fontSize: 12,
+    color: "#8E8E93",
     marginTop: 1,
   },
   postBadge: {
-    backgroundColor: "#E8F9EE",
-    borderRadius: 8,
-    paddingHorizontal: 9,
-    paddingVertical: 3,
+    backgroundColor: "rgba(52,199,89,0.12)",
+    borderRadius: 9,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
   },
   postBadgeText: {
-    fontSize: 12.5,
+    fontSize: 13,
     fontWeight: "700",
     color: "#1F8A4C",
   },
   postBody: {
     fontSize: 14,
     color: "#3A4354",
-    lineHeight: 20,
-    marginBottom: 4,
+    lineHeight: 21,
+    marginBottom: 6,
   },
   postDivider: {
     height: 1,
     backgroundColor: "#F1F4F8",
-    marginVertical: 14,
+    marginVertical: 16,
   },
   statsRow: {
     flexDirection: "row",
-    gap: 12,
-    marginTop: 16,
+    gap: 14,
+    marginTop: 18,
   },
   statCard: {
     flex: 1,
-    backgroundColor: "#F7F9FC",
-    borderRadius: 18,
-    paddingVertical: 16,
-    paddingHorizontal: 14,
+    backgroundColor: "#F7F8FA",
+    borderRadius: 14,
+    paddingVertical: 18,
+    paddingHorizontal: 16,
   },
   statValue: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: "800",
     color: "#1A2233",
     letterSpacing: -0.5,
   },
   statLabel: {
     fontSize: 12,
-    color: "#8A93A2",
-    marginTop: 3,
-    lineHeight: 16,
+    color: "#8E8E93",
+    marginTop: 4,
+    lineHeight: 17,
   },
   bottomContainer: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 28,
-    paddingBottom: 42,
-    paddingTop: 8,
+    paddingBottom: 48,
+    paddingTop: 12,
   },
   dotsContainer: {
     flexDirection: "row",
-    gap: 7,
+    gap: 8,
     alignItems: "center",
   },
   dot: {
-    width: 7,
-    height: 7,
+    height: 8,
     borderRadius: 4,
   },
   dotActive: {
+    width: 24,
     backgroundColor: "#0A84FF",
-    width: 20,
   },
   dotInactive: {
-    backgroundColor: "#DCE1E8",
+    width: 8,
+    backgroundColor: "#D1D5DB",
   },
   arrowButton: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     backgroundColor: "#1A2233",
     alignItems: "center",
     justifyContent: "center",
+    shadowColor: "#1A2233",
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 5 },
+    elevation: 5,
   },
   getStartedButton: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
-    height: 52,
-    paddingHorizontal: 26,
-    borderRadius: 26,
+    gap: 10,
+    height: 56,
+    paddingHorizontal: 30,
+    borderRadius: 28,
     backgroundColor: "#0A84FF",
+    shadowColor: "#0A84FF",
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 6,
   },
   getStartedText: {
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: "600",
     color: "#FFFFFF",
   },

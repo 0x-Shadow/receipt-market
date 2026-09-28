@@ -12,11 +12,23 @@ try {
   Notifications = null;
 }
 
+export async function savePushToken(token: string): Promise<void> {
+  if (!supabase) return;
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return;
+  await supabase
+    .from("push_tokens")
+    .upsert({ user_id: user.id, token }, { onConflict: "user_id,token" });
+}
+
 export async function ensurePushPermission(): Promise<string | null> {
   if (!Notifications) return null;
   const { status } = await Notifications.requestPermissionsAsync();
   if (status !== "granted") return null;
   const token = (await Notifications.getExpoPushTokenAsync()).data;
+  await savePushToken(token);
   return token;
 }
 
@@ -25,6 +37,7 @@ export async function registerForPushNotifications(): Promise<string | null> {
   const { status } = await Notifications.requestPermissionsAsync();
   if (status !== "granted") return null;
   const token = (await Notifications.getExpoPushTokenAsync()).data;
+  await savePushToken(token);
   return token;
 }
 

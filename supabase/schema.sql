@@ -68,6 +68,14 @@ create table if not exists profiles (
   created_at timestamptz default now()
 );
 
+create table if not exists push_tokens (
+  id uuid primary key default uuid_generate_v4(),
+  user_id uuid references auth.users(id) on delete cascade not null,
+  token text not null,
+  created_at timestamptz default now(),
+  unique(user_id, token)
+);
+
 alter table stores enable row level security;
 alter table products enable row level security;
 alter table receipts enable row level security;
@@ -75,6 +83,7 @@ alter table prices enable row level security;
 alter table watchlist enable row level security;
 alter table community_posts enable row level security;
 alter table profiles enable row level security;
+alter table push_tokens enable row level security;
 
 drop policy if exists "public read stores" on stores;
 create policy "public read stores" on stores for select using (true);
@@ -89,10 +98,8 @@ create policy "own watchlist" on watchlist for all using (auth.uid() = user_id) 
 drop policy if exists "auth write prices" on prices;
 create policy "auth write prices" on prices for insert with check (
   auth.role() = 'authenticated'
-  and (
-    receipt_id is null
-    or auth.uid() = (select user_id from receipts where id = receipt_id)
-  )
+  and receipt_id is not null
+  and auth.uid() = (select user_id from receipts where id = receipt_id)
 );
 drop policy if exists "public read community_posts" on community_posts;
 create policy "public read community_posts" on community_posts for select using (true);
@@ -100,6 +107,8 @@ drop policy if exists "auth write community_posts" on community_posts;
 create policy "auth write community_posts" on community_posts for insert with check (auth.role() = 'authenticated');
 drop policy if exists "own profile" on profiles;
 create policy "own profile" on profiles for all using (auth.uid() = id) with check (auth.uid() = id);
+drop policy if exists "own push tokens" on push_tokens;
+create policy "own push tokens" on push_tokens for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 create index if not exists community_posts_created_at_idx on community_posts(created_at desc);
 

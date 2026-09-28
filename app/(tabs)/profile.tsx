@@ -4,6 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import { supabase, useAuth, signOut } from "../../src/lib/supabase";
+import { registerForPushNotifications } from "../../src/lib/notifications";
 import { C, Group, RowSeparator, ListRow, StatCard, Skeleton } from "../../src/components/Apple";
 
 let Notifications: any = null;
@@ -73,8 +74,8 @@ export default function Profile() {
       Linking.openSettings();
       return;
     }
-    const { status } = await Notifications.requestPermissionsAsync();
-    if (status === "granted") setNotifs(true);
+    const token = await registerForPushNotifications();
+    if (token) setNotifs(true);
     else {
       setNotifs(false);
       Linking.openSettings();

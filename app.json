@@ -8,6 +8,10 @@
     "platforms": ["ios", "android", "web"],
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
+    "updates": {
+      "enabled": true,
+      "checkAutomatically": "ON_LOAD"
+    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.receiptmarket.app",
@@ -15,7 +19,8 @@
     },
     "android": {
       "package": "com.receiptmarket.app",
-      "permissions": ["CAMERA", "NOTIFICATIONS"]
+      "permissions": ["CAMERA", "NOTIFICATIONS"],
+      "edgeToEdgeEnabled": true
     },
     "plugins": [
       "expo-router",
@@ -31,6 +36,11 @@
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#0E0E10"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "placeholder-replace-me"
+      }
     }
   }
 }
