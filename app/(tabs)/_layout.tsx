@@ -95,13 +95,15 @@ function FloatingTabBar({ state, navigation }: any) {
                     accessibilityRole="button"
                     accessibilityState={{ selected: focused }}
                     accessibilityLabel="Scan"
-                    style={({ pressed }) => [styles.scanHit, { opacity: pressed ? 0.85 : 1 }]}
+                    style={({ pressed }) => [styles.tabHit, { opacity: pressed ? 0.85 : 1 }]}
                   >
-                    <View style={styles.scanCircle}>
-                      <Ionicons name="camera" size={26} color="#FFFFFF" />
+                    <View style={styles.iconWrap}>
+                      <View style={styles.scanCircle}>
+                        <Ionicons name="camera" size={24} color="#FFFFFF" />
+                      </View>
                     </View>
+                    <Animated.Text style={[styles.label, { color }]}>Scan</Animated.Text>
                   </Pressable>
-                  <Animated.Text style={[styles.label, { color }]}>Scan</Animated.Text>
                 </View>
               );
             }
@@ -114,11 +116,13 @@ function FloatingTabBar({ state, navigation }: any) {
                   accessibilityLabel={meta.label}
                   style={({ pressed }) => [styles.tabHit, { transform: [{ scale: pressed ? 0.88 : 1 }] }]}
                 >
-                  <Ionicons
-                    name={focused ? meta.icon : (`${meta.icon}-outline` as any)}
-                    size={24}
-                    color={color}
-                  />
+                  <View style={styles.iconWrap}>
+                    <Ionicons
+                      name={focused ? meta.icon : (`${meta.icon}-outline` as any)}
+                      size={24}
+                      color={color}
+                    />
+                  </View>
                   <Animated.Text style={[styles.label, { color }]}>{meta.label}</Animated.Text>
                 </Pressable>
               </View>
@@ -178,7 +182,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 3,
-    paddingTop: 10,
+  },
+  iconWrap: {
+    height: 28,
+    alignItems: "center",
+    justifyContent: "center",
   },
   tabHit: {
     alignItems: "center",
@@ -191,23 +199,13 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: "600",
   },
-  scanHit: {
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: -44,
-  },
   scanCircle: {
-    width: 58,
-    height: 58,
-    borderRadius: 29,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: "#1A2233",
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#0B1220",
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 6,
   },
   dot: {
     position: "absolute",

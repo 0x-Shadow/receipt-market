@@ -5,7 +5,11 @@
     "version": "0.1.0",
     "orientation": "portrait",
     "scheme": "receipt-market",
-    "platforms": ["ios", "android", "web"],
+    "platforms": [
+      "ios",
+      "android",
+      "web"
+    ],
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "updates": {
@@ -19,7 +23,10 @@
     },
     "android": {
       "package": "com.receiptmarket.app",
-      "permissions": ["CAMERA", "NOTIFICATIONS"],
+      "permissions": [
+        "CAMERA",
+        "NOTIFICATIONS"
+      ],
       "edgeToEdgeEnabled": true
     },
     "plugins": [
@@ -27,20 +34,21 @@
       "expo-camera",
       [
         "expo-notifications",
-        { "icon": "./assets/icon.png", "color": "#007AFF" }
+        {
+          "icon": "./assets/icon.png",
+          "color": "#007AFF"
+        }
       ]
     ],
-    "experiments": { "typedRoutes": true },
+    "experiments": {
+      "typedRoutes": true
+    },
     "favicon": "./assets/favicon.png",
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#0E0E10"
     },
-    "extra": {
-      "eas": {
-        "projectId": "placeholder-replace-me"
-      }
-    }
+    "extra": {}
   }
 }

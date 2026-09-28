@@ -21,18 +21,5 @@
         "simulator": false
       }
     }
-  },
-  "submit": {
-    "production": {
-      "android": {
-        "package": "com.receiptmarket.app"
-      },
-      "ios": {
-        "bundleId": "com.receiptmarket.app"
-      }
-    }
-  },
-  "update": {
-    "channel": "auto"
   }
 }
