@@ -1,4 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+// useCallback above; keep handler identities stable so the native camera view
+// is not reconfigured on every render.
 import { View, Text, Pressable, TextInput, ScrollView, Alert, StyleSheet, Animated, Easing } from "react-native";
 import { CameraView, useCameraPermissions, type BarcodeSettings } from "expo-camera";
 import * as ImagePicker from "expo-image-picker";
@@ -28,6 +30,7 @@ type ReceiptMeta = {
   issueDate: string;
 };
 const BARCODE_SETTINGS: BarcodeSettings = { barcodeTypes: ["ean13", "ean8", "upc_a", "upc_e", "code128", "code39"] };
+const QR_SETTINGS: BarcodeSettings = { barcodeTypes: ["qr"] };
 
 function ReceiptScanOverlay() {
   const scanLineY = useRef(new Animated.Value(0)).current;
@@ -294,6 +297,17 @@ export default function Scan() {
   const camRef = useRef<CameraView>(null);
   const lastBarcodeRef = useRef<string>("");
   const parsed = raw ? parseGreekReceipt(raw) : null;
+
+  const onScan = useCallback(
+    (e: any) => {
+      if (qrMode) {
+        if (e?.type === "qr" && typeof e.data === "string") void handleQr(e.data);
+        return;
+      }
+      if (barcodeMode && typeof e?.data === "string") void handleBarcodeScan(e);
+    },
+    [qrMode, barcodeMode],
+  );
 
   async function snap() {
     if (!camRef.current) return;
@@ -615,21 +629,9 @@ export default function Scan() {
             flash={flash ? "on" : "off"}
             ref={camRef}
             barcodeScannerSettings={
-              barcodeMode || qrMode
-                ? { barcodeTypes: barcodeMode ? BARCODE_SETTINGS.barcodeTypes : ["qr"] }
-                : undefined
+              qrMode ? QR_SETTINGS : barcodeMode ? BARCODE_SETTINGS : undefined
             }
-            onBarcodeScanned={
-              qrMode
-                ? (e) => {
-                    if (e?.type === "qr" && typeof e.data === "string") {
-                      void handleQr(e.data);
-                    }
-                  }
-                : barcodeMode
-                  ? handleBarcodeScan
-                  : undefined
-            }
+            onBarcodeScanned={onScan}
           />
           <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, pointerEvents: "box-none", paddingTop: 44, paddingBottom: 142 }}>
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
