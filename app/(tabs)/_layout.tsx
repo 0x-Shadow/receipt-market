@@ -4,6 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useEffect, useRef, useState } from "react";
 import { Animated, Pressable, StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const TABS: { name: string; icon: keyof typeof Ionicons.glyphMap; label: string }[] = [
   { name: "index", icon: "home", label: "Αρχική" },
@@ -20,6 +21,8 @@ const DOT_W = 18;
 type Cell = { x: number; width: number };
 
 function FloatingTabBar({ state, navigation }: any) {
+  const insets = useSafeAreaInsets();
+  const barBottom = Math.max(insets.bottom, 12) + 10;
   const dotX = useRef(new Animated.Value(0)).current;
   const dotOpacity = useRef(new Animated.Value(0)).current;
   const cells = useRef<Record<string, Cell>>({});
@@ -69,7 +72,7 @@ function FloatingTabBar({ state, navigation }: any) {
   };
 
   return (
-    <View style={styles.wrap} pointerEvents="box-none">
+    <View style={[styles.wrap, { bottom: barBottom }]} pointerEvents="box-none">
       <View style={styles.pill}>
         <View style={styles.base} />
         <BlurView intensity={85} tint="light" style={StyleSheet.absoluteFill} />

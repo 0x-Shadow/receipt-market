@@ -1,7 +1,10 @@
 import { createClient, type SupabaseClient, type Session, type User } from "@supabase/supabase-js";
 import { useCallback, useEffect, useState } from "react";
+import { polyfillWebCrypto } from "expo-standard-web-crypto";
 import * as WebBrowser from "expo-web-browser";
 import * as Linking from "expo-linking";
+
+polyfillWebCrypto();
 
 const url = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const anon = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
