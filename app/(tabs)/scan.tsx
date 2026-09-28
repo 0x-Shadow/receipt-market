@@ -427,19 +427,18 @@ export default function Scan() {
           barcodeScannerSettings={{ barcodeTypes: ["ean13", "ean8", "upc_a", "upc_e", "code128", "code39"] }}
           onBarcodeScanned={handleBarcodeScan}
         />
-        <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, pointerEvents: "box-none" }}>
-          <View style={{ flex: 1, margin: 20, marginBottom: 168, borderRadius: 24, borderWidth: 2, borderColor: "rgba(255,255,255,0.5)", overflow: "hidden", position: "relative" }}>
-              <View style={{ position: "absolute", inset: 0, backgroundColor: "rgba(0,0,0,0.15)" }} />
-              <BarcodeScanOverlay />
-            <View style={{ position: "absolute", top: 18, left: 0, right: 0, alignItems: "center" }}>
-              <View style={{ backgroundColor: "rgba(0,0,0,0.55)", paddingHorizontal: 16, paddingVertical: 8, borderRadius: 999 }}>
-                <Text style={{ color: "#fff", fontSize: 13.5, fontWeight: "600" }}>Στόκασε τον barcode 📦</Text>
-              </View>
-            </View>
+        <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, pointerEvents: "box-none", paddingTop: 14, paddingBottom: 118 }}>
+          <View style={{ alignSelf: "center", backgroundColor: "rgba(0,0,0,0.55)", paddingHorizontal: 16, paddingVertical: 8, borderRadius: 999 }}>
+            <Text style={{ color: "#fff", fontSize: 13.5, fontWeight: "600" }}>Στόκασε τον barcode 📦</Text>
+          </View>
+
+          <View style={{ flex: 1, maxHeight: 520, marginHorizontal: 20, marginTop: 14, borderRadius: 24, borderWidth: 2, borderColor: "rgba(255,255,255,0.5)", overflow: "hidden", position: "relative" }}>
+            <View style={{ position: "absolute", inset: 0, backgroundColor: "rgba(0,0,0,0.15)" }} />
+            <BarcodeScanOverlay />
           </View>
 
           {barcodeResult && (
-            <View style={{ position: "absolute", bottom: 244, left: 20, right: 20 }}>
+            <View style={{ position: "absolute", bottom: 220, left: 20, right: 20 }}>
               {barcodeResult.found ? (
                 <SuccessAnimation>
                   <View style={{ backgroundColor: "rgba(0,0,0,0.85)", borderRadius: 16, padding: 16 }}>
@@ -482,7 +481,7 @@ export default function Scan() {
             </View>
           )}
 
-          <View style={{ alignItems: "center", marginTop: "auto", marginBottom: 150 }}>
+          <View style={{ alignItems: "center", marginTop: 22 }}>
             <View style={{ flexDirection: "row", alignItems: "center", width: 260, justifyContent: "space-between" }}>
               <Pressable onPress={() => setFlash(f => !f)} style={styles.ctrlBtn}>
                 <Ionicons name={flash ? "flash" : "flash-off"} size={22} color="#fff" />
@@ -505,18 +504,17 @@ export default function Scan() {
       {raw === "" ? (
         <View style={{ flex: 1 }}>
           <CameraView style={{ flex: 1 }} facing="back" flash={flash ? "on" : "off"} ref={camRef} />
-          <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, pointerEvents: "box-none" }}>
-            <View style={{ flex: 1, margin: 20, marginBottom: 168, borderRadius: 24, borderWidth: 2, borderColor: "rgba(255,255,255,0.5)", overflow: "hidden", position: "relative" }}>
-              <View style={{ position: "absolute", inset: 0, backgroundColor: "rgba(0,0,0,0.15)" }} />
-              <ReceiptScanOverlay />
-              <View style={{ position: "absolute", top: 18, left: 0, right: 0, alignItems: "center" }}>
-                <View style={{ backgroundColor: "rgba(0,0,0,0.55)", paddingHorizontal: 16, paddingVertical: 8, borderRadius: 999 }}>
-                  <Text style={{ color: "#fff", fontSize: 13.5, fontWeight: "600" }}>Στόκασε την απόδειξη 📄</Text>
-                </View>
-              </View>
+          <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, pointerEvents: "box-none", paddingTop: 14, paddingBottom: 118 }}>
+            <View style={{ alignSelf: "center", backgroundColor: "rgba(0,0,0,0.55)", paddingHorizontal: 16, paddingVertical: 8, borderRadius: 999 }}>
+              <Text style={{ color: "#fff", fontSize: 13.5, fontWeight: "600" }}>Στόχασε την απόδειξη 📄</Text>
             </View>
 
-            <View style={{ alignItems: "center", marginTop: "auto", marginBottom: 150 }}>
+            <View style={{ flex: 1, maxHeight: 520, marginHorizontal: 20, marginTop: 14, borderRadius: 24, borderWidth: 2, borderColor: "rgba(255,255,255,0.5)", overflow: "hidden", position: "relative" }}>
+              <View style={{ position: "absolute", inset: 0, backgroundColor: "rgba(0,0,0,0.15)" }} />
+              <ReceiptScanOverlay />
+            </View>
+
+            <View style={{ alignItems: "center", marginTop: 22 }}>
               <View style={{ flexDirection: "row", alignItems: "center", width: 260, justifyContent: "space-between" }}>
                 <Pressable onPress={() => setFlash(f => !f)} style={styles.ctrlBtn}>
                   <Ionicons name={flash ? "flash" : "flash-off"} size={22} color="#fff" />

@@ -253,7 +253,7 @@ export default function Community() {
 const styles = StyleSheet.create({
   fab: {
     position: "absolute",
-    bottom: 122,
+    bottom: 130,
     right: 16,
     flexDirection: "row",
     alignItems: "center",
